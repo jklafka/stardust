@@ -6,7 +6,7 @@
   --text: #eef0fa;
   --muted: #a4a9c6;
   --accent: #ffd75f;
-  --slide-ms: 300ms;
+  --slide-ms: 200ms;
   --ending-delay: 300ms; /* Lets the last move finish first. */
   --ending-fade: 700ms;
 

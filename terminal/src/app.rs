@@ -86,7 +86,7 @@ const fn bold(color: u8) -> Style {
     }
 }
 
-const SLIDE_STEPS: u32 = 15;
+const SLIDE_STEPS: u32 = 10;
 const SLIDE_FRAME_MS: u32 = 20;
 
 pub struct App {
