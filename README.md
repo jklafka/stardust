@@ -69,7 +69,7 @@ New tiles are Dust 90% of the time and Rock 10% of the time.
 ### Good to know
 
 - **Best score:** the terminal version saves your best score in `~/.stardust_best`, and the web version saves it in your browser. The two aren't linked.
-- **Terminal size:** the full layout, with a side panel listing every tile, needs 79x22. Narrower terminals such as phones get a compact layout that needs 43x21.
+- **Terminal size:** the full layout, with a side panel listing every tile, needs 71x24. Narrower terminals such as phones get a compact layout that needs 46x25.
 - **Repeatable games:** in the terminal, `stardust --seed 7` (or `cargo run --release -- --seed 7`) gives the same tile placements each time if you make the same moves.
 
 ## Development

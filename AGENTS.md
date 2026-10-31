@@ -83,7 +83,7 @@ tmux -L stardust-test capture-pane -pt game    # Show the screen (add -e for col
 tmux -L stardust-test kill-server
 ```
 
-Also check the compact layout with `-x 45 -y 24`. tmux can't show how colors, emoji and animation actually look, so say so in the PR when a change depends on them.
+Also check the compact layout with `-x 46 -y 25`. tmux can't show how colors, emoji and animation actually look, so say so in the PR when a change depends on them.
 
 ## Checking changes in a browser
 

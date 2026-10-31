@@ -32,28 +32,28 @@ impl Layout {
 }
 
 pub const WIDE: Layout = Layout {
-    tile_w: 12,
-    tile_h: 4,
+    tile_w: 10,
+    tile_h: 5,
     gap_x: 2,
     gap_y: 1,
     pad_x: 2,
-    pad_y: 1,
+    pad_y: 0,
     panel: true,
-    width: 79,
-    height: 22,
+    width: 71,
+    height: 24,
 };
 
 /// For phones and other narrow terminals.
 pub const COMPACT: Layout = Layout {
     tile_w: 10,
-    tile_h: 4,
-    gap_x: 1,
+    tile_h: 5,
+    gap_x: 2,
     gap_y: 1,
     pad_x: 0,
     pad_y: 0,
     panel: false,
-    width: 43,
-    height: 21,
+    width: 46,
+    height: 25,
 };
 
 pub fn choose_layout(width: usize, height: usize) -> Option<Layout> {
@@ -169,12 +169,12 @@ impl App {
         self.screen.put(x + 1, y, &rank.to_string(), strong);
         self.screen.put(
             x + (w - 2) / 2,
-            y + 1,
+            y + 2,
             tier.glyph.encode_utf8(&mut [0; 4]),
             text,
         );
         let name_x = x + (w - text_width(tier.name) as i32) / 2;
-        self.screen.put(name_x, y + 2, tier.name, strong);
+        self.screen.put(name_x, y + 3, tier.name, strong);
     }
 
     /// A spawning tile: small, holding only its glyph.
@@ -190,7 +190,7 @@ impl App {
             .fill(x + 2, y + 1, w as usize - 4, h - 2, tier.bg);
         self.screen.put(
             x + (w - 2) / 2,
-            y + 1,
+            y + 2,
             tier.glyph.encode_utf8(&mut [0; 4]),
             text,
         );
@@ -480,10 +480,26 @@ mod tests {
     #[test]
     fn layouts() {
         assert_eq!(choose_layout(80, 24), Some(WIDE));
-        assert_eq!(choose_layout(45, 30), Some(COMPACT));
+        assert_eq!(choose_layout(46, 30), Some(COMPACT));
         assert_eq!(choose_layout(30, 30), None);
         assert!(WIDE.board_w() + 21 <= WIDE.width);
         assert!(COMPACT.board_w() <= COMPACT.width);
+        assert_eq!(choose_layout(80, 23), None);
+        assert_eq!(choose_layout(71, 24), Some(WIDE));
+        assert_eq!(choose_layout(70, 25), Some(COMPACT));
+        assert_eq!(choose_layout(46, 25), Some(COMPACT));
+        assert_eq!(choose_layout(45, 24), None);
+        assert_eq!(WIDE.board_h() + 1, WIDE.height);
+        assert_eq!(COMPACT.board_h() + 2, COMPACT.height);
+    }
+
+    #[test]
+    fn tiles_look_square() {
+        // Terminal cells are about twice as tall as wide.
+        for layout in [WIDE, COMPACT] {
+            assert_eq!(layout.tile_w, 2 * layout.tile_h);
+            assert_eq!(layout.gap_x, 2 * layout.gap_y);
+        }
     }
 
     #[test]
