@@ -22,6 +22,22 @@
   --tile-11: #fff; --ink-11: #000;
 }
 
+/* The plants theme only swaps the tile colors. Each background is light or
+   dark enough that its glyph stands out, and the ink is readable on it. */
+:root[data-theme="plants"] {
+  --tile-1: #d0d0d0; --ink-1: #000;
+  --tile-2: #ffffaf; --ink-2: #000;
+  --tile-3: #87d7ff; --ink-3: #000;
+  --tile-4: #af5f00; --ink-4: #fff;
+  --tile-5: #d7ffd7; --ink-5: #000;
+  --tile-6: #005faf; --ink-6: #fff;
+  --tile-7: #5f005f; --ink-7: #fff;
+  --tile-8: #d75f5f; --ink-8: #000;
+  --tile-9: #ffd7af; --ink-9: #000;
+  --tile-10: #d7d7ff; --ink-10: #000;
+  --tile-11: #ffd700; --ink-11: #000;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -114,7 +130,7 @@ button:focus-visible {
   position: relative;
   container-type: inline-size;
   aspect-ratio: 1;
-  width: min(100%, calc(100dvh - 170px));
+  width: min(100%, calc(100dvh - 230px));
   min-width: min(100%, 280px);
   margin-inline: auto;
   border-radius: 12px;
@@ -238,6 +254,64 @@ button:focus-visible {
   display: none;
 }
 
+.theme {
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+}
+
+.theme-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 10px;
+}
+
+.theme-label {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.theme-buttons {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+.theme-button {
+  min-width: 88px;
+  background: transparent;
+  color: var(--text);
+}
+
+.theme-button[aria-pressed="true"] {
+  background: var(--accent);
+  color: #1a1400;
+}
+
+.theme-button:disabled {
+  cursor: default;
+  filter: none;
+}
+
+.theme-button:disabled:not([aria-pressed="true"]) {
+  color: var(--muted);
+  opacity: 0.6;
+}
+
+.theme-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
 .help {
   margin: 0;
   color: var(--muted);
@@ -353,6 +427,7 @@ kbd {
     grid-template-areas:
       "top top"
       "board tiers"
+      "theme tiers"
       "help help";
     justify-content: center;
     width: min(100%, 800px);
@@ -361,6 +436,7 @@ kbd {
 
   .top { grid-area: top; }
   .board { grid-area: board; }
+  .theme { grid-area: theme; }
   .help { grid-area: help; }
   .tiers { grid-area: tiers; }
 

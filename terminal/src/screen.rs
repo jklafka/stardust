@@ -160,8 +160,10 @@ mod tests {
 
     #[test]
     fn every_tile_glyph_is_double_width() {
-        for tier in &stardust_core::TIERS {
-            assert_eq!(char_width(tier.glyph), 2, "{}", tier.name);
+        for theme in &stardust_core::THEMES {
+            for tier in &theme.tiers {
+                assert_eq!(char_width(tier.glyph), 2, "{} {}", theme.id, tier.name);
+            }
         }
     }
 

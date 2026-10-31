@@ -20,24 +20,69 @@ const fn tier(name: &'static str, glyph: char, bg: u8, fg: u8) -> Tier {
     }
 }
 
-/// Index + 1 is the tile's rank. Two tiles of rank n merge into rank n + 1.
-pub const TIERS: [Tier; 11] = [
-    tier("Dust", '✨', 245, 16),
-    tier("Rock", '🪨', 94, 230),
-    tier("Comet", '🌠', 31, 231),
-    tier("Moon", '🌕', 250, 16),
-    tier("Planet", '🌍', 153, 16),
-    tier("Gas Giant", '🪐', 61, 231),
-    tier("Star", '⭐', 202, 16),
-    tier("Red Giant", '🔴', 52, 231),
-    tier("Black Hole", '⚫', 134, 231),
-    tier("Galaxy", '🌀', 213, 16),
-    tier("Universe", '🌌', 231, 16),
-];
-pub const MAX_RANK: u8 = TIERS.len() as u8;
+pub const MAX_RANK: u8 = 11;
 
-pub fn tier_of(rank: u8) -> &'static Tier {
-    &TIERS[rank as usize - 1]
+/// A set of names, glyphs and colors for the tiles. Themes change only how the
+/// game looks: rules, scoring and tile ranks are the same in every theme.
+pub struct Theme {
+    /// Stable identifier, used when saving the choice.
+    pub id: &'static str,
+    pub name: &'static str,
+    pub win_message: &'static str,
+    /// Index + 1 is the tile's rank. Two tiles of rank n merge into rank n + 1.
+    pub tiers: [Tier; MAX_RANK as usize],
+}
+
+impl Theme {
+    /// The tier for a rank from 1 to `MAX_RANK`.
+    pub fn tier(&self, rank: u8) -> &Tier {
+        &self.tiers[rank as usize - 1]
+    }
+}
+
+/// Every theme. The first is the default.
+pub const THEMES: [Theme; 2] = [
+    Theme {
+        id: "space",
+        name: "Space",
+        win_message: "You made a Universe!",
+        tiers: [
+            tier("Dust", '✨', 245, 16),
+            tier("Rock", '🪨', 94, 230),
+            tier("Comet", '🌠', 31, 231),
+            tier("Moon", '🌕', 250, 16),
+            tier("Planet", '🌍', 153, 16),
+            tier("Gas Giant", '🪐', 61, 231),
+            tier("Star", '⭐', 202, 16),
+            tier("Red Giant", '🔴', 52, 231),
+            tier("Black Hole", '⚫', 134, 231),
+            tier("Galaxy", '🌀', 213, 16),
+            tier("Universe", '🌌', 231, 16),
+        ],
+    },
+    Theme {
+        id: "plants",
+        name: "Plants",
+        win_message: "You grew an Oak!",
+        tiers: [
+            tier("Seed", '🌰', 252, 16),
+            tier("Sprout", '🌱', 229, 16),
+            tier("Clover", '🍀', 117, 16),
+            tier("Herb", '🌿', 130, 231),
+            tier("Tulip", '🌷', 194, 16),
+            tier("Sunflower", '🌻', 25, 231),
+            tier("Bamboo", '🎍', 53, 231),
+            tier("Cactus", '🌵', 167, 16),
+            tier("Palm", '🌴', 223, 16),
+            tier("Pine", '🌲', 189, 16),
+            tier("Oak", '🌳', 220, 16),
+        ],
+    },
+];
+
+/// The index of the theme with this id.
+pub fn theme_index(id: &str) -> Option<usize> {
+    THEMES.iter().position(|theme| theme.id == id)
 }
 
 /// Tile ranks, with 0 for an empty cell.
@@ -172,6 +217,10 @@ pub struct Game {
     pub won: bool,
     /// The player acknowledged the win message and kept playing.
     pub continued: bool,
+    /// Moves made in this game.
+    pub moves: u32,
+    /// Index into `THEMES`.
+    pub theme: usize,
     rng: Rng,
 }
 
@@ -183,6 +232,8 @@ impl Game {
             best,
             won: false,
             continued: false,
+            moves: 0,
+            theme: 0,
             rng: Rng(seed),
         };
         game.reset();
@@ -195,8 +246,36 @@ impl Game {
         self.score = 0;
         self.won = false;
         self.continued = false;
+        self.moves = 0;
         self.spawn();
         self.spawn();
+    }
+
+    pub fn theme(&self) -> &'static Theme {
+        &THEMES[self.theme]
+    }
+
+    /// Chooses a theme by index. Out-of-range values are ignored.
+    pub fn set_theme(&mut self, index: usize) {
+        if index < THEMES.len() {
+            self.theme = index;
+        }
+    }
+
+    /// Themes may change before the first move, when the game is over, and
+    /// while the win message shows, but not once the player is mid-game.
+    pub fn can_switch_theme(&self) -> bool {
+        self.moves == 0 || self.over() || self.showing_win()
+    }
+
+    /// Moves to the next theme if switching is allowed. Returns true if it
+    /// changed. The board and score are never touched.
+    pub fn cycle_theme(&mut self) -> bool {
+        if !self.can_switch_theme() {
+            return false;
+        }
+        self.theme = (self.theme + 1) % THEMES.len();
+        true
     }
 
     pub fn spawn(&mut self) -> Option<Cell> {
@@ -236,6 +315,7 @@ impl Game {
         }
         self.board = result.board;
         self.score += result.gained;
+        self.moves += 1;
         self.best = self.best.max(self.score);
         if !self.won && self.highest() == MAX_RANK {
             self.won = true;
@@ -275,10 +355,71 @@ mod tests {
     }
 
     #[test]
-    fn eleven_tiers_with_unique_names_and_glyphs() {
-        let names: std::collections::HashSet<_> = TIERS.iter().map(|t| t.name).collect();
-        let glyphs: std::collections::HashSet<_> = TIERS.iter().map(|t| t.glyph).collect();
-        assert_eq!((TIERS.len(), names.len(), glyphs.len()), (11, 11, 11));
+    fn every_theme_has_eleven_unique_tiers_that_fit() {
+        assert_eq!(THEMES[0].id, "space");
+        assert_eq!(THEMES[1].id, "plants");
+        for theme in &THEMES {
+            assert_eq!(theme.tiers.len(), MAX_RANK as usize);
+            let names: std::collections::HashSet<_> = theme.tiers.iter().map(|t| t.name).collect();
+            let glyphs: std::collections::HashSet<_> =
+                theme.tiers.iter().map(|t| t.glyph).collect();
+            let backgrounds: std::collections::HashSet<_> =
+                theme.tiers.iter().map(|t| t.bg).collect();
+            assert_eq!((names.len(), glyphs.len(), backgrounds.len()), (11, 11, 11));
+            for tier in &theme.tiers {
+                assert!(tier.name.len() <= 10, "{}", tier.name);
+                assert_ne!(tier.fg, tier.bg);
+            }
+            assert_eq!(theme.tier(1).name, theme.tiers[0].name);
+            assert_eq!(theme.tier(MAX_RANK).name, theme.tiers[10].name);
+        }
+        let ids: std::collections::HashSet<_> = THEMES.iter().map(|t| t.id).collect();
+        assert_eq!(ids.len(), THEMES.len());
+        assert_eq!(THEMES[0].win_message, "You made a Universe!");
+        assert_eq!(THEMES[1].win_message, "You grew an Oak!");
+        assert_eq!(theme_index("plants"), Some(1));
+        assert_eq!(theme_index("nope"), None);
+    }
+
+    #[test]
+    fn theme_switch_rule() {
+        let mut game = Game::new(1, 0);
+        assert!(game.can_switch_theme()); // before the first move
+        game.board = row([1, 1, 0, 0]);
+        game.try_move(Left);
+        assert_eq!(game.moves, 1);
+        assert!(!game.can_switch_theme()); // mid-game
+        assert!(!game.cycle_theme());
+        assert_eq!(game.theme, 0);
+
+        game.board = FULL; // game over
+        assert!(game.can_switch_theme());
+
+        game.board = row([T - 1, T - 1, 0, 0]);
+        game.try_move(Left);
+        assert!(game.showing_win());
+        assert!(game.can_switch_theme());
+        game.continued = true; // chose to keep playing
+        assert!(!game.can_switch_theme());
+
+        game.reset();
+        assert_eq!(game.moves, 0);
+        assert!(game.can_switch_theme());
+    }
+
+    #[test]
+    fn switching_keeps_board_and_score() {
+        let mut game = Game::new(1, 0);
+        game.board = row([3, 2, 0, 0]);
+        game.score = 77;
+        let board = game.board;
+        assert!(game.cycle_theme());
+        assert_eq!(game.theme().id, "plants");
+        assert!(game.cycle_theme());
+        assert_eq!(game.theme().id, "space");
+        assert_eq!((game.board, game.score), (board, 77));
+        game.set_theme(99);
+        assert_eq!(game.theme, 0);
     }
 
     #[test]

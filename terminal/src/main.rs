@@ -3,7 +3,7 @@ use std::process::ExitCode;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use stardust::app::App;
-use stardust::{best, terminal};
+use stardust::{best, terminal, theme};
 use stardust_core::Game;
 
 const USAGE: &str = "\
@@ -57,7 +57,9 @@ fn main() -> ExitCode {
         return ExitCode::FAILURE;
     }
 
-    let mut app = App::new(Game::new(seed, best::load()));
+    let mut game = Game::new(seed, best::load());
+    game.set_theme(theme::load());
+    let mut app = App::new(game);
     match terminal::run(&mut app) {
         Ok(None) => {
             let game = &app.game;

@@ -7,6 +7,7 @@ pub enum Event {
     Move(Direction),
     Quit,
     New,
+    Theme,
     Continue,
     Press(i32, i32),
     Release(i32, i32),
@@ -37,6 +38,7 @@ fn key(byte: u8) -> Option<Event> {
         b'q' | b'Q' | 0x03 => Some(Event::Quit),
         b'n' | b'N' => Some(Event::New),
         b'c' | b'C' => Some(Event::Continue),
+        b't' | b'T' => Some(Event::Theme),
         b'w' | b'W' | b'i' | b'I' => Some(Event::Move(Direction::Up)),
         b's' | b'S' | b'k' | b'K' => Some(Event::Move(Direction::Down)),
         b'a' | b'A' | b'j' | b'J' => Some(Event::Move(Direction::Left)),
@@ -159,6 +161,11 @@ mod tests {
     #[test]
     fn keys() {
         assert_eq!(events(b"qnc\x03x"), [Quit, New, Continue, Quit]);
+    }
+
+    #[test]
+    fn theme_key_in_both_cases() {
+        assert_eq!(events(b"tT"), [Theme, Theme]);
     }
 
     #[test]

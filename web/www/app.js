@@ -6,7 +6,8 @@ const SLIDE_MS = 200; // Keep in step with --slide-ms in style.css.
 const SWIPE_MIN_PX = 24;
 const BEST_KEY = "stardust-best";
 const GAME_KEY = "stardust-game";
-const GAME_VERSION = 1;
+const THEME_KEY = "stardust-theme";
+const GAME_VERSION = 2; // Version 1 saves have no move count and still load.
 const DIRECTIONS = {
   ArrowUp: 0, ArrowDown: 1, ArrowLeft: 2, ArrowRight: 3,
   w: 0, W: 0, i: 0, I: 0,
@@ -24,7 +25,9 @@ const playAgain = byId("play-again");
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
 
 let game;
-let tiers = [];
+let themes = [];
+let currentTheme = 0;
+let themeButtons = [];
 let settleTimer = null;
 let pendingEffects = null;
 let overlayKind = null;
@@ -59,6 +62,7 @@ function saveGame() {
         score: game.stardust_score(),
         won: game.stardust_won() === 1,
         continued: game.stardust_continued() === 1,
+        moves: game.stardust_moves(),
       }),
     );
   } catch {
@@ -71,7 +75,7 @@ function saveGame() {
 function restoreGame() {
   try {
     const saved = JSON.parse(localStorage.getItem(GAME_KEY));
-    if (!saved || saved.v !== GAME_VERSION) return false;
+    if (!saved || (saved.v !== 1 && saved.v !== GAME_VERSION)) return false;
     const { board: cells, score, won, continued } = saved;
     if (!Array.isArray(cells) || cells.length !== SIZE * SIZE) return false;
     if (!cells.every((rank) => Number.isInteger(rank) && rank >= 0)) return false;
@@ -79,28 +83,58 @@ function restoreGame() {
     if (typeof won !== "boolean" || typeof continued !== "boolean") return false;
     game.stardust_restore_begin();
     cells.forEach((rank, index) => game.stardust_restore_cell(index, rank));
-    return game.stardust_restore_commit(score, won ? 1 : 0, continued ? 1 : 0) === 1;
+    // Version 1 didn't count moves. A game with a score had moves; one without
+    // is treated as untouched.
+    let moves;
+    if (saved.v === 1) {
+      moves = score === 0 ? 0 : 1;
+    } else {
+      moves = saved.moves;
+      if (!Number.isInteger(moves) || moves < 0 || moves > 0xffffffff) return false;
+    }
+    return game.stardust_restore_commit(score, won ? 1 : 0, continued ? 1 : 0, moves) === 1;
   } catch {
     return false;
   }
 }
 
-function readTiers(memory) {
+function loadTheme() {
+  try {
+    const id = localStorage.getItem(THEME_KEY);
+    const index = themes.findIndex((theme) => theme.id === id);
+    return index < 0 ? 0 : index;
+  } catch {
+    return 0;
+  }
+}
+
+function saveTheme() {
+  try {
+    localStorage.setItem(THEME_KEY, themes[currentTheme].id);
+  } catch {
+    // A forgotten theme should never interrupt the game.
+  }
+}
+
+function readThemes(memory) {
   const decoder = new TextDecoder();
-  return Array.from({ length: game.stardust_tier_count() }, (_, tier) => ({
-    glyph: String.fromCodePoint(game.stardust_tier_glyph(tier)),
-    name: decoder.decode(
-      new Uint8Array(
-        memory.buffer,
-        game.stardust_tier_name_ptr(tier),
-        game.stardust_tier_name_len(tier),
+  const text = (ptr, len) => decoder.decode(new Uint8Array(memory.buffer, ptr, len));
+  return Array.from({ length: game.stardust_theme_count() }, (_, theme) => ({
+    id: text(game.stardust_theme_id_ptr(theme), game.stardust_theme_id_len(theme)),
+    name: text(game.stardust_theme_name_ptr(theme), game.stardust_theme_name_len(theme)),
+    win: text(game.stardust_theme_win_ptr(theme), game.stardust_theme_win_len(theme)),
+    tiers: Array.from({ length: game.stardust_tier_count() }, (_, tier) => ({
+      glyph: String.fromCodePoint(game.stardust_tier_glyph(theme, tier)),
+      name: text(
+        game.stardust_tier_name_ptr(theme, tier),
+        game.stardust_tier_name_len(theme, tier),
       ),
-    ),
+    })),
   }));
 }
 
 function createTile(rank, r, c, effect) {
-  const tier = tiers[rank - 1];
+  const tier = themes[currentTheme].tiers[rank - 1];
   const tile = document.createElement("div");
   tile.className = effect ? `tile ${effect}` : "tile";
   tile.style.setProperty("--tile", `var(--tile-${rank})`);
@@ -175,14 +209,56 @@ function renderOverlay() {
     return;
   }
 
+  writeOverlay();
+  keepGoing.hidden = kind !== "win";
+  (kind === "win" ? keepGoing : playAgain).focus();
+}
+
+// Fills in the overlay text, which depends on the theme.
+function writeOverlay() {
   const score = game.stardust_score();
-  const title = kind === "win" ? "You made a Universe!" : "No moves left";
+  const title = overlayKind === "win" ? themes[currentTheme].win : "No moves left";
   byId("overlay-title").textContent = title;
   byId("overlay-score").textContent =
-    kind === "win" ? `Score ${score}` : `Score ${score} · Best ${game.stardust_best()}`;
-  keepGoing.hidden = kind !== "win";
+    overlayKind === "win" ? `Score ${score}` : `Score ${score} · Best ${game.stardust_best()}`;
   byId("status").textContent = `${title} Score ${score}.`;
-  (kind === "win" ? keepGoing : playAgain).focus();
+}
+
+function renderTierList() {
+  byId("tier-list").replaceChildren(
+    ...themes[currentTheme].tiers.map((tier, index) => {
+      const item = document.createElement("li");
+      const number = document.createElement("span");
+      number.className = "number";
+      number.textContent = index + 1;
+      item.append(number, `${tier.glyph} ${tier.name}`);
+      return item;
+    }),
+  );
+}
+
+// Shows which theme is current and whether it can be changed now.
+function renderThemeControl() {
+  const allowed = game.stardust_can_switch_theme() === 1;
+  document.documentElement.dataset.theme = themes[currentTheme].id;
+  themeButtons.forEach((button, index) => {
+    button.setAttribute("aria-pressed", String(index === currentTheme));
+    button.disabled = !allowed;
+  });
+  byId("theme-note").hidden = allowed;
+}
+
+// Changes the theme if the game allows it. Redraws everything at once.
+function chooseTheme(index) {
+  if (index === currentTheme || game.stardust_set_theme(index) !== 1) return;
+  settle(); // Finish any slide first, so nothing animates across the switch.
+  currentTheme = index;
+  saveTheme();
+  renderTierList();
+  renderTiles(null);
+  renderStats();
+  if (overlayKind) writeOverlay();
+  renderThemeControl();
 }
 
 // Finishes any running animation, so fast input never waits for one.
@@ -195,6 +271,7 @@ function settle() {
   pendingEffects = null;
   renderStats();
   renderOverlay();
+  renderThemeControl();
 }
 
 function move(direction) {
@@ -250,6 +327,8 @@ function onKeyDown(event) {
     move(DIRECTIONS[event.key]);
   } else if (event.key === "n" || event.key === "N") {
     newGame();
+  } else if (event.key === "t" || event.key === "T") {
+    if (game.stardust_can_switch_theme() === 1) chooseTheme((currentTheme + 1) % themes.length);
   } else if ((event.key === "c" || event.key === "C") && overlayKind === "win") {
     continuePlaying();
   }
@@ -284,16 +363,16 @@ function buildPage() {
   cells.append(...Array.from({ length: SIZE * SIZE }, () => document.createElement("div")));
   board.tabIndex = -1;
 
-  byId("tier-list").append(
-    ...tiers.map((tier, index) => {
-      const item = document.createElement("li");
-      const number = document.createElement("span");
-      number.className = "number";
-      number.textContent = index + 1;
-      item.append(number, `${tier.glyph} ${tier.name}`);
-      return item;
-    }),
-  );
+  renderTierList();
+  themeButtons = themes.map((theme, index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "theme-button";
+    button.textContent = theme.name;
+    button.addEventListener("click", () => chooseTheme(index));
+    return button;
+  });
+  byId("theme-buttons").append(...themeButtons);
 
   byId("new-game").addEventListener("click", newGame);
   playAgain.addEventListener("click", newGame);
@@ -310,7 +389,10 @@ async function start() {
 
   const [seed] = crypto.getRandomValues(new Uint32Array(1));
   game.stardust_init(seed, loadBest());
-  tiers = readTiers(game.memory);
+  themes = readThemes(game.memory);
+  // Before restoring a game: a game in progress can't change theme, but this isn't a change.
+  currentTheme = loadTheme();
+  game.stardust_set_theme(currentTheme);
   if (!restoreGame()) saveGame();
   buildPage();
   settle();
