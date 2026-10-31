@@ -483,6 +483,3 @@ mod tests {
         }
     }
 }
-
-#[cfg(test)]
-mod ci_probe { #[test] fn must_fail() { assert_eq!(1, 2); } }
