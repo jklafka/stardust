@@ -6,11 +6,10 @@ Stardust is a terminal game written in Rust: tiles slide on a 4x4 grid, and two 
 
 ```sh
 cargo run --release                       # Play
+cargo fmt                                 # Format
 cargo test                                # Run all tests
 cargo clippy --all-targets -- -D warnings # Lint
 ```
-
-Do not use `cargo fmt` as a check yet. The code is not rustfmt-clean, so running it rewrites unrelated lines. Match the surrounding style, and keep any repo-wide reformat in its own PR.
 
 ## Code layout
 
@@ -73,11 +72,11 @@ Also check the compact layout with `-x 45 -y 24`. tmux can't show how colors, em
 
 ## Git workflow
 
-There is no CI and `main` has no branch protection, so these checks are the only gate. Never push directly to `main`.
+GitHub Actions (`.github/workflows/ci.yml`) runs `cargo fmt --check`, plus `cargo test` on Ubuntu and macOS, on every PR and every push to `main`. It doesn't run clippy, and `main` has no branch protection, so GitHub won't block a merge on its own. Never push directly to `main`.
 
 1. Work on a branch.
-2. Before merging, make sure `cargo test` and `cargo clippy --all-targets -- -D warnings` pass. For drawing or terminal changes, also do the terminal check above.
+2. Before opening a PR, make sure `cargo fmt --check`, `cargo test` and `cargo clippy --all-targets -- -D warnings` pass. For drawing or terminal changes, also do the terminal check above.
 3. Open a PR that explains what changed, what was tested, and what wasn't.
-4. Once the checks pass, you may merge without further sign-off: `gh pr merge --squash --delete-branch`
+4. Wait for CI (`gh pr checks --watch`). Once it passes, you may merge without further sign-off: `gh pr merge --squash --delete-branch`
 
 Commit `Cargo.lock`. Keep plans and feature ideas in GitHub Issues, not in this file.
