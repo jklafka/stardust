@@ -29,9 +29,9 @@ python3 -m http.server -d web/www 8000    # Serve it at http://localhost:8000
 | `terminal/src/main.rs` | Argument parsing and startup. |
 | `web/src/lib.rs` | Plain functions exported from WebAssembly to the page. |
 | `web/www/app.js` | Page logic: rendering, animation, keys, swipes, saved game, best score and theme. |
-| `web/www/style.css`, `index.html` | The page itself, including the theme palettes. |
+| `web/www/style.css`, `web/index.template.html` | The page itself, including the theme palettes. Edit the template, not the generated `web/www/index.html`. |
 | `web/www/404.html` | The page served for unknown paths. Standalone, with its own styles. |
-| `web/build.sh` | Compiles the game to `web/www/stardust.wasm`, which is gitignored. |
+| `web/build.sh` | Compiles the game and generates `web/www/stardust.wasm` and `web/www/index.html`, both gitignored. |
 
 Keep game rules in `core` so both versions share them and they can be tested without a terminal or browser, and keep `unsafe` in `terminal/src/terminal.rs`. Tests live in a `#[cfg(test)]` module in the file they cover.
 
@@ -104,6 +104,7 @@ Run web changes in a real browser, at a desktop size and a phone size, and try b
 The web version is live at https://stardust.jklafka.cloud. It's a Cloudflare Pages project named `stardust` (`stardust-dww.pages.dev`), connected to this repo. Every merge to `main` redeploys automatically, so merging ships to players. Each pull request gets a Cloudflare preview at `<branch>.stardust-dww.pages.dev`.
 
 - Build output directory: `web/www`
+- Caching: the custom domain lets browsers cache `.js` and `.css` for 4 hours, but not HTML or `.wasm`, and `*.pages.dev` doesn't show this. `web/build.sh` stamps a `?v=` release hash into the asset links so a browser can't mix old code with a new game file. Every asset the page loads must keep carrying that version.
 - Build command: `curl -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --target wasm32-unknown-unknown && . "$HOME/.cargo/env" && ./web/build.sh`
 - Build settings live in the Cloudflare dashboard, not in this repo.
 - `web/www/404.html` is served for unknown paths, so its links must be root-absolute (such as `/`).

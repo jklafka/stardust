@@ -125,9 +125,9 @@ The repo is a Cargo workspace, with the game rules shared by both versions:
 | `terminal/src/main.rs` | Argument parsing and startup |
 | `web/src/lib.rs` | Functions exported to the page from WebAssembly |
 | `web/www/app.js` | Page logic: rendering, animation, keys, swipes, saved game, best score and theme |
-| `web/www/index.html`, `web/www/style.css` | The page itself, including the theme colors |
+| `web/index.template.html`, `web/www/style.css` | The page itself, including the theme colors |
 | `web/www/404.html` | The page shown for unknown addresses |
-| `web/build.sh` | Compiles the game into `web/www/stardust.wasm` |
+| `web/build.sh` | Compiles the game and generates `web/www/stardust.wasm` and `web/www/index.html` |
 
 `libc` is the only dependency, used by the terminal version. The web version has no build tools beyond Rust, and no JavaScript dependencies.
 

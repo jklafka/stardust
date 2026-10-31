@@ -382,7 +382,9 @@ function buildPage() {
 }
 
 async function start() {
-  const response = await fetch(new URL("stardust.wasm", import.meta.url));
+  // Load the game file from the same release as this script. See web/build.sh.
+  const release = new URL(import.meta.url).search;
+  const response = await fetch(new URL(`stardust.wasm${release}`, import.meta.url));
   if (!response.ok) throw new Error(`Could not load the game (HTTP ${response.status}).`);
   const { instance } = await WebAssembly.instantiate(await response.arrayBuffer());
   game = instance.exports;
