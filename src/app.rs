@@ -57,7 +57,9 @@ pub const COMPACT: Layout = Layout {
 };
 
 pub fn choose_layout(width: usize, height: usize) -> Option<Layout> {
-    [WIDE, COMPACT].into_iter().find(|layout| width >= layout.width && height >= layout.height)
+    [WIDE, COMPACT]
+        .into_iter()
+        .find(|layout| width >= layout.width && height >= layout.height)
 }
 
 const BOARD_BG: u8 = 235;
@@ -68,11 +70,19 @@ const MUTED: u8 = 245;
 const BRIGHT: u8 = 255;
 
 const fn fg(color: u8) -> Style {
-    Style { fg: Some(color), bg: None, bold: false }
+    Style {
+        fg: Some(color),
+        bg: None,
+        bold: false,
+    }
 }
 
 const fn bold(color: u8) -> Style {
-    Style { fg: Some(color), bg: None, bold: true }
+    Style {
+        fg: Some(color),
+        bg: None,
+        bold: true,
+    }
 }
 
 const SLIDE_STEPS: u32 = 6;
@@ -124,7 +134,10 @@ impl App {
     }
 
     fn board_origin(&self, layout: &Layout) -> (i32, i32) {
-        (self.origin.0, self.origin.1 + if layout.panel { 0 } else { 1 })
+        (
+            self.origin.0,
+            self.origin.1 + if layout.panel { 0 } else { 1 },
+        )
     }
 
     /// Screen position of a board cell. Fractional cells are used mid-animation.
@@ -145,11 +158,21 @@ impl App {
     fn draw_tile(&mut self, layout: &Layout, (x, y): (i32, i32), rank: u8, grow: i32) {
         let tier = tier_of(rank);
         let (w, h) = (layout.tile_w as i32, layout.tile_h);
-        let text = Style { fg: Some(tier.fg), bg: Some(tier.bg), bold: false };
+        let text = Style {
+            fg: Some(tier.fg),
+            bg: Some(tier.bg),
+            bold: false,
+        };
         let strong = Style { bold: true, ..text };
-        self.screen.fill(x - grow, y, (w + 2 * grow) as usize, h, tier.bg);
+        self.screen
+            .fill(x - grow, y, (w + 2 * grow) as usize, h, tier.bg);
         self.screen.put(x + 1, y, &rank.to_string(), strong);
-        self.screen.put(x + (w - 2) / 2, y + 1, tier.glyph.encode_utf8(&mut [0; 4]), text);
+        self.screen.put(
+            x + (w - 2) / 2,
+            y + 1,
+            tier.glyph.encode_utf8(&mut [0; 4]),
+            text,
+        );
         let name_x = x + (w - text_width(tier.name) as i32) / 2;
         self.screen.put(name_x, y + 2, tier.name, strong);
     }
@@ -158,9 +181,19 @@ impl App {
     fn draw_small_tile(&mut self, layout: &Layout, (x, y): (i32, i32), rank: u8) {
         let tier = tier_of(rank);
         let (w, h) = (layout.tile_w as i32, layout.tile_h);
-        let text = Style { fg: Some(tier.fg), bg: Some(tier.bg), bold: false };
-        self.screen.fill(x + 2, y + 1, w as usize - 4, h - 2, tier.bg);
-        self.screen.put(x + (w - 2) / 2, y + 1, tier.glyph.encode_utf8(&mut [0; 4]), text);
+        let text = Style {
+            fg: Some(tier.fg),
+            bg: Some(tier.bg),
+            bold: false,
+        };
+        self.screen
+            .fill(x + 2, y + 1, w as usize - 4, h - 2, tier.bg);
+        self.screen.put(
+            x + (w - 2) / 2,
+            y + 1,
+            tier.glyph.encode_utf8(&mut [0; 4]),
+            text,
+        );
     }
 
     fn draw_chrome(&mut self, layout: &Layout) {
@@ -173,16 +206,38 @@ impl App {
             let highest = self.game.highest();
             self.screen.put(px, oy, "S T A R D U S T", bold(ACCENT));
             self.screen.put(px, oy + 2, "SCORE", fg(MUTED));
-            self.screen.put(px + 7, oy + 2, &score.to_string(), Style { bold: true, ..Style::default() });
+            self.screen.put(
+                px + 7,
+                oy + 2,
+                &score.to_string(),
+                Style {
+                    bold: true,
+                    ..Style::default()
+                },
+            );
             self.screen.put(px, oy + 3, "BEST", fg(MUTED));
-            self.screen.put(px + 7, oy + 3, &best.to_string(), Style { bold: true, ..Style::default() });
-            self.screen.put(px, oy + 5, "Smallest to largest", fg(MUTED));
+            self.screen.put(
+                px + 7,
+                oy + 3,
+                &best.to_string(),
+                Style {
+                    bold: true,
+                    ..Style::default()
+                },
+            );
+            self.screen
+                .put(px, oy + 5, "Smallest to largest", fg(MUTED));
             for (i, tier) in TIERS.iter().enumerate() {
                 let rank = i as u8 + 1;
                 let row = oy + 6 + i as i32;
                 let number = fg(if rank == highest { ACCENT } else { MUTED });
                 self.screen.put(px, row, &format!("{rank:>2}"), number);
-                self.screen.put(px + 3, row, tier.glyph.encode_utf8(&mut [0; 4]), Style::default());
+                self.screen.put(
+                    px + 3,
+                    row,
+                    tier.glyph.encode_utf8(&mut [0; 4]),
+                    Style::default(),
+                );
                 let name = Style {
                     fg: Some(if rank <= highest { BRIGHT } else { MUTED }),
                     bg: None,
@@ -198,19 +253,30 @@ impl App {
         }
         let controls = "Arrows or swipe: move   n: new   q: quit";
         let controls_x = ox + (layout.board_w() as i32 - controls.len() as i32) / 2;
-        self.screen.put(controls_x, by + layout.board_h() as i32, controls, fg(MUTED));
-        self.screen.fill(bx, by, layout.board_w(), layout.board_h(), BOARD_BG);
+        self.screen.put(
+            controls_x,
+            by + layout.board_h() as i32,
+            controls,
+            fg(MUTED),
+        );
+        self.screen
+            .fill(bx, by, layout.board_w(), layout.board_h(), BOARD_BG);
         for r in 0..SIZE {
             for c in 0..SIZE {
                 let (x, y) = self.cell_pos(layout, (r, c));
-                self.screen.fill(x, y, layout.tile_w, layout.tile_h, EMPTY_BG);
+                self.screen
+                    .fill(x, y, layout.tile_w, layout.tile_h, EMPTY_BG);
             }
         }
     }
 
     fn draw_overlay(&mut self, layout: &Layout, lines: &[(String, bool)]) {
         let (bx, by) = self.board_origin(layout);
-        let widest = lines.iter().map(|(text, _)| text_width(text)).max().unwrap_or(0);
+        let widest = lines
+            .iter()
+            .map(|(text, _)| text_width(text))
+            .max()
+            .unwrap_or(0);
         let w = (layout.board_w() - 2).min(widest + 6) as i32;
         let h = lines.len() as i32 + 2;
         let x = bx + (layout.board_w() as i32 - w) / 2;
@@ -256,10 +322,14 @@ impl App {
 
     fn draw(&mut self) {
         let Some(layout) = self.layout else {
-            let message = format!("Enlarge the terminal to {}x{}", COMPACT.width, COMPACT.height);
+            let message = format!(
+                "Enlarge the terminal to {}x{}",
+                COMPACT.width, COMPACT.height
+            );
             self.screen.clear();
             let x = self.size.0.saturating_sub(message.len()) as i32 / 2;
-            self.screen.put(x, self.size.1 as i32 / 2, &message, Style::default());
+            self.screen
+                .put(x, self.size.1 as i32 / 2, &message, Style::default());
             self.flush();
             return;
         };
@@ -330,7 +400,9 @@ impl App {
             return;
         }
         let best_before = self.game.best;
-        let Some((result, spawned)) = self.game.try_move(direction) else { return };
+        let Some((result, spawned)) = self.game.try_move(direction) else {
+            return;
+        };
         if self.game.best != best_before {
             best::save(self.game.best);
         }

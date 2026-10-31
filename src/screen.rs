@@ -31,7 +31,14 @@ struct Cell {
     style: Style,
 }
 
-const BLANK: Cell = Cell { ch: ' ', style: Style { fg: None, bg: None, bold: false } };
+const BLANK: Cell = Cell {
+    ch: ' ',
+    style: Style {
+        fg: None,
+        bg: None,
+        bold: false,
+    },
+};
 
 pub struct Screen {
     width: usize,
@@ -78,7 +85,14 @@ impl Screen {
             if x >= 0 && (x + width) as usize <= self.width {
                 self.set(x as usize, y, Cell { ch, style });
                 if width == 2 {
-                    self.set(x as usize + 1, y, Cell { ch: CONTINUATION, style });
+                    self.set(
+                        x as usize + 1,
+                        y,
+                        Cell {
+                            ch: CONTINUATION,
+                            style,
+                        },
+                    );
                 }
             }
             x += width;
@@ -87,7 +101,10 @@ impl Screen {
 
     pub fn fill(&mut self, x: i32, y: i32, w: usize, h: usize, bg: u8) {
         let blank = " ".repeat(w);
-        let style = Style { bg: Some(bg), ..Style::default() };
+        let style = Style {
+            bg: Some(bg),
+            ..Style::default()
+        };
         for row in y..y + h as i32 {
             self.put(x, row, &blank, style);
         }

@@ -22,7 +22,9 @@ fn parse_seed() -> Result<Option<u64>, String> {
         match arg.as_str() {
             "--seed" => {
                 let value = args.next().ok_or("--seed needs a value")?;
-                let parsed = value.parse().map_err(|_| format!("invalid seed: {value}"))?;
+                let parsed = value
+                    .parse()
+                    .map_err(|_| format!("invalid seed: {value}"))?;
                 seed = Some(parsed);
             }
             _ => return Err(format!("unknown argument: {arg}")),
@@ -32,13 +34,18 @@ fn parse_seed() -> Result<Option<u64>, String> {
 }
 
 fn main() -> ExitCode {
-    if std::env::args().skip(1).any(|arg| arg == "-h" || arg == "--help") {
+    if std::env::args()
+        .skip(1)
+        .any(|arg| arg == "-h" || arg == "--help")
+    {
         println!("{USAGE}");
         return ExitCode::SUCCESS;
     }
     let seed = match parse_seed() {
         Ok(seed) => seed.unwrap_or_else(|| {
-            SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |d| d.as_nanos() as u64)
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .map_or(0, |d| d.as_nanos() as u64)
         }),
         Err(message) => {
             eprintln!("{message}\n\n{USAGE}");

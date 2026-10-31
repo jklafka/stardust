@@ -43,12 +43,15 @@ fn key(byte: u8) -> Option<Event> {
 
 /// Parses SGR mouse parameters, the part of `ESC [ < b ; x ; y M` between `<` and the final byte.
 fn mouse_params(params: &[u8]) -> Option<(i32, i32, i32)> {
-    let mut fields = params.strip_prefix(b"<")?.split(|&byte| byte == b';').map(|field| {
-        if field.is_empty() || !field.iter().all(u8::is_ascii_digit) {
-            return None;
-        }
-        std::str::from_utf8(field).ok()?.parse::<i32>().ok()
-    });
+    let mut fields = params
+        .strip_prefix(b"<")?
+        .split(|&byte| byte == b';')
+        .map(|field| {
+            if field.is_empty() || !field.iter().all(u8::is_ascii_digit) {
+                return None;
+            }
+            std::str::from_utf8(field).ok()?.parse::<i32>().ok()
+        });
     let parsed = (fields.next()??, fields.next()??, fields.next()??);
     fields.next().is_none().then_some(parsed)
 }
@@ -76,7 +79,10 @@ pub fn parse_input(data: &[u8]) -> (Vec<Event>, Vec<u8>) {
             None => return (events, data[i..].to_vec()),
             Some(b'[') => {
                 let start = i + 2;
-                let params = data[start..].iter().take_while(|&&byte| is_csi_param(byte)).count();
+                let params = data[start..]
+                    .iter()
+                    .take_while(|&&byte| is_csi_param(byte))
+                    .count();
                 let end = start + params;
                 match data.get(end) {
                     None => return (events, data[i..].to_vec()),
@@ -113,9 +119,17 @@ pub fn swipe_direction(x0: i32, y0: i32, x1: i32, y1: i32) -> Option<Direction> 
     if dx.abs().max(dy.abs()) < 3 {
         None
     } else if dx.abs() >= dy.abs() {
-        Some(if dx > 0 { Direction::Right } else { Direction::Left })
+        Some(if dx > 0 {
+            Direction::Right
+        } else {
+            Direction::Left
+        })
     } else {
-        Some(if dy > 0 { Direction::Down } else { Direction::Up })
+        Some(if dy > 0 {
+            Direction::Down
+        } else {
+            Direction::Up
+        })
     }
 }
 
@@ -163,7 +177,10 @@ mod tests {
 
     #[test]
     fn mouse_press_and_release() {
-        assert_eq!(events(b"\x1b[<0;10;5M\x1b[<0;20;5m"), [Press(10, 5), Release(20, 5)]);
+        assert_eq!(
+            events(b"\x1b[<0;10;5M\x1b[<0;20;5m"),
+            [Press(10, 5), Release(20, 5)]
+        );
     }
 
     #[test]
