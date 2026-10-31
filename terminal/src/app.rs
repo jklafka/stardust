@@ -6,7 +6,8 @@ use crate::best;
 use crate::input::{Event, parse_input, swipe_direction};
 use crate::screen::{Screen, Style, text_width};
 use crate::terminal;
-use stardust_core::{Cell, Direction, Game, MoveResult, SIZE, TIERS, tier_of};
+use crate::theme;
+use stardust_core::{Cell, Direction, Game, MoveResult, SIZE};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Layout {
@@ -154,7 +155,7 @@ impl App {
     }
 
     fn draw_tile(&mut self, layout: &Layout, (x, y): (i32, i32), rank: u8) {
-        let tier = tier_of(rank);
+        let tier = self.game.theme().tier(rank);
         let (w, h) = (layout.tile_w as i32, layout.tile_h);
         let text = Style {
             fg: Some(tier.fg),
@@ -178,6 +179,8 @@ impl App {
         let (ox, oy) = self.origin;
         let (bx, by) = self.board_origin(layout);
         let (score, best) = (self.game.score, self.game.best);
+        let theme_name = self.game.theme().name;
+        let switchable = self.game.can_switch_theme();
         self.screen.clear();
         if layout.panel {
             let px = ox + layout.board_w() as i32 + 2;
@@ -203,9 +206,16 @@ impl App {
                     ..Style::default()
                 },
             );
+            self.screen.put(px, oy + 4, "THEME", fg(MUTED));
+            self.screen
+                .put(px + 7, oy + 4, theme_name, Style::default());
+            if switchable {
+                let hint_x = px + 8 + text_width(theme_name) as i32;
+                self.screen.put(hint_x, oy + 4, "(t)", fg(MUTED));
+            }
             self.screen
                 .put(px, oy + 5, "Smallest to largest", fg(MUTED));
-            for (i, tier) in TIERS.iter().enumerate() {
+            for (i, tier) in self.game.theme().tiers.iter().enumerate() {
                 let rank = i as u8 + 1;
                 let row = oy + 6 + i as i32;
                 let number = fg(if rank == highest { ACCENT } else { MUTED });
@@ -225,11 +235,16 @@ impl App {
             }
         } else {
             self.screen.put(ox, oy, "STARDUST", bold(ACCENT));
+            self.screen.put(ox + 10, oy, theme_name, fg(MUTED));
             let status = format!("Score {score}  Best {best}");
             let status_x = ox + layout.width as i32 - status.len() as i32;
             self.screen.put(status_x, oy, &status, Style::default());
         }
-        let controls = "Arrows/WASD/IJKL/swipe: move  n: new  q: quit";
+        let controls = match (switchable, layout.panel) {
+            (false, _) => "Arrows/WASD/IJKL/swipe: move  n: new  q: quit",
+            (true, true) => "Arrows/WASD/swipe: move  n: new  t: theme  q: quit",
+            (true, false) => "WASD/swipe: move  n: new  t: theme  q: quit",
+        };
         let controls_x = ox + (layout.board_w() as i32 - controls.len() as i32) / 2;
         self.screen.put(
             controls_x,
@@ -308,10 +323,11 @@ impl App {
             self.draw_overlay(
                 &layout,
                 &[
-                    ("You made a Universe!".into(), true),
+                    (self.game.theme().win_message.into(), true),
                     (format!("Score {score}"), false),
                     ("c: keep going".into(), false),
                     ("n: new game   q: quit".into(), false),
+                    ("t: change theme".into(), false),
                 ],
             );
         } else if self.game.over() {
@@ -321,6 +337,7 @@ impl App {
                     ("No moves left".into(), true),
                     (format!("Score {score}   Best {best}"), false),
                     ("n: new game   q: quit".into(), false),
+                    ("t: change theme".into(), false),
                 ],
             );
         }
@@ -373,6 +390,11 @@ impl App {
         match event {
             Event::Quit => return false,
             Event::New => self.game.reset(),
+            Event::Theme => {
+                if self.game.cycle_theme() {
+                    theme::save(self.game.theme);
+                }
+            }
             Event::Continue => {
                 if self.game.showing_win() {
                     self.game.continued = true;
@@ -462,9 +484,22 @@ mod tests {
     }
 
     #[test]
+    fn controls_lines_fit_the_compact_width() {
+        for text in [
+            "WASD/swipe: move  n: new  t: theme  q: quit",
+            "Arrows/WASD/IJKL/swipe: move  n: new  q: quit",
+        ] {
+            assert!(text.len() <= COMPACT.width, "{text}");
+        }
+        assert!("Arrows/WASD/swipe: move  n: new  t: theme  q: quit".len() <= WIDE.board_w());
+    }
+
+    #[test]
     fn names_fit_on_a_compact_tile() {
-        for tier in &TIERS {
-            assert!(tier.name.len() <= COMPACT.tile_w, "{}", tier.name);
+        for theme in &stardust_core::THEMES {
+            for tier in &theme.tiers {
+                assert!(tier.name.len() <= COMPACT.tile_w, "{}", tier.name);
+            }
         }
     }
 }
