@@ -2,11 +2,13 @@
 
 [![CI](https://github.com/jklafka/stardust/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/jklafka/stardust/actions/workflows/ci.yml)
 
-A terminal game in the style of 2048. Slide tiles around a 4x4 grid and merge matching ones to build your way from a speck of Dust to a whole Universe.
+A game in the style of 2048, for your terminal or your browser. Slide tiles around a 4x4 grid and merge matching ones to build your way from a speck of Dust to a whole Universe.
 
 ## Getting started
 
-You need [Rust](https://www.rust-lang.org/tools/install) (recent stable) on macOS or Linux, and a terminal with 256-color and emoji support. Windows isn't supported.
+### In a terminal
+
+You need [Rust](https://www.rust-lang.org/tools/install) (recent stable) on macOS or Linux, and a terminal with 256-color and emoji support. Windows isn't supported in the terminal.
 
 ```sh
 git clone https://github.com/jklafka/stardust.git
@@ -15,6 +17,18 @@ cargo run --release
 ```
 
 The built game is at `target/release/stardust`, and it runs without Rust installed.
+
+### In a browser
+
+The web version runs the same game rules as WebAssembly, with swipe controls for phones. To build it you need [rustup](https://rustup.rs) (Homebrew's `rust` formula can't compile to WebAssembly), and the page must be served over HTTP rather than opened as a file:
+
+```sh
+rustup toolchain install stable --target wasm32-unknown-unknown
+./web/build.sh
+python3 -m http.server -d web/www 8000
+```
+
+Then open <http://localhost:8000>. After building, `web/www` is a complete static site that any web host can serve.
 
 ## How to play
 
@@ -25,12 +39,12 @@ Make a Universe to win, then keep playing for a higher score if you like. The ga
 | Input | Action |
 |---|---|
 | Arrow keys | Move tiles |
-| Mouse or touch drag | Move tiles in the direction of the drag |
+| Mouse drag or swipe | Move tiles in the direction of the drag |
 | `n` | Start a new game immediately |
 | `c` | Keep playing after winning |
-| `q` or Ctrl-C | Quit |
+| `q` or Ctrl-C | Quit (terminal only) |
 
-Touch drags only work if your terminal app sends touch as mouse input, which depends on the app. While the game is running, it captures the mouse, so you can't select text in the usual way.
+In a terminal, swipes only work if your terminal app sends touch as mouse input, which depends on the app. While the terminal version is running, it captures the mouse, so you can't select text in the usual way.
 
 ### Tiles
 
@@ -54,9 +68,9 @@ New tiles are Dust 90% of the time and Rock 10% of the time.
 
 ### Good to know
 
-- **Best score:** your best score is saved in `~/.stardust_best`.
+- **Best score:** the terminal version saves your best score in `~/.stardust_best`, and the web version saves it in your browser. The two aren't linked.
 - **Terminal size:** the full layout, with a side panel listing every tile, needs 79x22. Narrower terminals such as phones get a compact layout that needs 43x21.
-- **Repeatable games:** `stardust --seed 7` (or `cargo run --release -- --seed 7`) gives the same tile placements each time if you make the same moves.
+- **Repeatable games:** in the terminal, `stardust --seed 7` (or `cargo run --release -- --seed 7`) gives the same tile placements each time if you make the same moves.
 
 ## Development
 
@@ -66,18 +80,23 @@ cargo test                                 # Run the unit tests
 cargo clippy --all-targets -- -D warnings  # Lint
 ```
 
-[CI](.github/workflows/ci.yml) checks formatting, and runs the tests on Ubuntu and macOS, for every pull request and every push to `main`.
+[CI](.github/workflows/ci.yml) checks formatting, runs the tests on Ubuntu and macOS, and builds the web version, for every pull request and every push to `main`.
 
-| File | Responsibility |
+The repo is a Cargo workspace, with the game rules shared by both versions:
+
+| Path | Responsibility |
 |---|---|
-| `src/game.rs` | Rules, tiles, scoring and spawning |
-| `src/input.rs` | Key and mouse parsing, and swipe detection |
-| `src/screen.rs` | Cell buffer that redraws only changed rows |
-| `src/app.rs` | Layouts, drawing, animation and the main loop |
-| `src/terminal.rs` | Raw mode, terminal size, input and signals |
-| `src/best.rs` | Loading and saving the best score |
-| `src/main.rs` | Argument parsing and startup |
+| `core/src/lib.rs` | Rules, tiles, scoring and spawning, shared by both versions |
+| `terminal/src/input.rs` | Key and mouse parsing, and swipe detection |
+| `terminal/src/screen.rs` | Cell buffer that redraws only changed rows |
+| `terminal/src/app.rs` | Layouts, drawing, animation and the main loop |
+| `terminal/src/terminal.rs` | Raw mode, terminal size, input and signals |
+| `terminal/src/best.rs` | Loading and saving the best score |
+| `terminal/src/main.rs` | Argument parsing and startup |
+| `web/src/lib.rs` | Functions exported to the page from WebAssembly |
+| `web/www/` | The page: HTML, CSS and JavaScript |
+| `web/build.sh` | Compiles the game into `web/www/stardust.wasm` |
 
-`libc` is the only dependency.
+`libc` is the only dependency, used by the terminal version. The web version has no build tools beyond Rust, and no JavaScript dependencies.
 
 Contributors and coding agents should also read [AGENTS.md](AGENTS.md), which covers the rules to preserve, how to test in a real terminal, and the Git workflow.

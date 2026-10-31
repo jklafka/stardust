@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0b0d17">
+  <meta name="description" content="Merge cosmic matter on a 4x4 grid, from Dust up to a Universe.">
+  <title>Stardust</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✨</text></svg>">
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <main class="app">
+    <header class="top">
+      <h1>Stardust</h1>
+      <div class="stats">
+        <div class="stat"><span>Score</span><output id="score">0</output></div>
+        <div class="stat"><span>Best</span><output id="best">0</output></div>
+      </div>
+      <button id="new-game" type="button">New game</button>
+    </header>
+
+    <section id="board" class="board" aria-label="Game board" aria-describedby="help">
+      <div class="layer cells" aria-hidden="true"></div>
+      <div id="tiles" class="layer"></div>
+      <div id="overlay" class="overlay" hidden>
+        <h2 id="overlay-title"></h2>
+        <p id="overlay-score"></p>
+        <div class="overlay-actions">
+          <button id="keep-going" type="button">Keep going</button>
+          <button id="play-again" type="button">New game</button>
+        </div>
+      </div>
+    </section>
+
+    <p id="help" class="help">
+      <span class="key-help">Use the arrow keys or drag to move. Press <kbd>n</kbd> for a new game.</span>
+      <span class="touch-help">Swipe on the board to move.</span>
+    </p>
+
+    <aside class="tiers">
+      <h2>Smallest to largest</h2>
+      <ol id="tier-list"></ol>
+    </aside>
+
+    <div id="status" class="visually-hidden" role="status"></div>
+  </main>
+  <noscript><p class="fatal">Stardust needs JavaScript and WebAssembly to run.</p></noscript>
+</body>
+</html>

@@ -36,3 +36,13 @@ jobs:
           rustup toolchain install stable --profile minimal
           rustup default stable
       - run: cargo test --locked
+
+  web:
+    name: Web build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install Rust
+        run: rustup toolchain install stable --profile minimal --target wasm32-unknown-unknown
+      - run: ./web/build.sh

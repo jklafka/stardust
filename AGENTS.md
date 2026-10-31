@@ -1,29 +1,39 @@
 # AGENTS.md
 
-Stardust is a terminal game written in Rust: tiles slide on a 4x4 grid, and two matching tiles merge into the next of 11 tiers, from Dust up to Universe. It targets Unix terminals and uses `termios` through `libc`.
+Stardust is a game written in Rust: tiles slide on a 4x4 grid, and two matching tiles merge into the next of 11 tiers, from Dust up to Universe. It has a terminal version for Unix, which uses `termios` through `libc`, and a web version that compiles the same rules to WebAssembly.
 
 ## Commands
 
 ```sh
-cargo run --release                       # Play
+cargo run --release                       # Play in the terminal
 cargo fmt                                 # Format
 cargo test                                # Run all tests
 cargo clippy --all-targets -- -D warnings # Lint
+./web/build.sh                            # Build the web version into web/www
+python3 -m http.server -d web/www 8000    # Serve it at http://localhost:8000
 ```
+
+`web/build.sh` needs rustup with the `wasm32-unknown-unknown` target. Homebrew's `rust` formula can't compile to WebAssembly.
 
 ## Code layout
 
 | File | Responsibility |
 |---|---|
-| `src/game.rs` | Rules, tiers, scoring, spawning. No terminal code. |
-| `src/input.rs` | Turns raw bytes into events and drags into swipes. |
-| `src/screen.rs` | Cell buffer that redraws only changed rows. |
-| `src/app.rs` | Layouts, drawing, animation, main loop. |
-| `src/terminal.rs` | All `libc` and `unsafe` code: raw mode, size, input, signals. |
-| `src/best.rs` | Loads and saves the best score. |
-| `src/main.rs` | Argument parsing and startup. |
+| `core/src/lib.rs` | Rules, tiers, scoring, spawning. No terminal or web code. |
+| `terminal/src/input.rs` | Turns raw bytes into events and drags into swipes. |
+| `terminal/src/screen.rs` | Cell buffer that redraws only changed rows. |
+| `terminal/src/app.rs` | Layouts, drawing, animation, main loop. |
+| `terminal/src/terminal.rs` | All `libc` and `unsafe` code: raw mode, size, input, signals. |
+| `terminal/src/best.rs` | Loads and saves the best score. |
+| `terminal/src/main.rs` | Argument parsing and startup. |
+| `web/src/lib.rs` | Plain functions exported from WebAssembly to the page. |
+| `web/www/app.js` | Page logic: rendering, animation, keys, swipes, best score. |
+| `web/www/style.css`, `index.html` | The page itself. |
+| `web/build.sh` | Compiles the game to `web/www/stardust.wasm`, which is gitignored. |
 
-Keep game rules in `game.rs` so they can be tested without a terminal, and keep `unsafe` in `terminal.rs`. Tests live in a `#[cfg(test)]` module in the file they cover.
+Keep game rules in `core` so both versions share them and they can be tested without a terminal or browser, and keep `unsafe` in `terminal/src/terminal.rs`. Tests live in a `#[cfg(test)]` module in the file they cover.
+
+`web/src/lib.rs` and `web/www/app.js` are two sides of one interface, including the packed integers for moves, so change them together. Nothing type-checks that interface, and `cargo test` doesn't run the page.
 
 ## Rules to preserve
 
@@ -51,9 +61,14 @@ Keep game rules in `game.rs` so they can be tested without a terminal, and keep 
 **Input and animation**
 - Queued input skips animation, so fast play never lags.
 
+**Web**
+- Tiles must stay square at every screen size, including phones. Their width and height use the same formula so content can't stretch them.
+- The page uses no build step and no JavaScript dependencies. It loads the module with plain `WebAssembly.instantiate`.
+- `localStorage` can be blocked, so best-score failures must never interrupt the game.
+
 ## Dependencies
 
-`libc` is the only dependency. Ask the maintainer before adding a crate.
+`libc` is the only dependency, used by the terminal version. Ask the maintainer before adding a crate or a JavaScript package.
 
 ## Checking changes in a terminal
 
@@ -70,12 +85,16 @@ tmux -L stardust-test kill-server
 
 Also check the compact layout with `-x 45 -y 24`. tmux can't show how colors, emoji and animation actually look, so say so in the PR when a change depends on them.
 
+## Checking changes in a browser
+
+Run web changes in a real browser, at a desktop size and a phone size, and try both keys and touch. Chrome's device emulation is useful, but it isn't the same as a real phone, so say so in the PR if you haven't used one.
+
 ## Git workflow
 
-GitHub Actions (`.github/workflows/ci.yml`) runs `cargo fmt --check`, plus `cargo test` on Ubuntu and macOS, on every PR and every push to `main`. It doesn't run clippy, and `main` has no branch protection, so GitHub won't block a merge on its own. Never push directly to `main`.
+GitHub Actions (`.github/workflows/ci.yml`) runs `cargo fmt --check`, `cargo test` on Ubuntu and macOS, and the web build, on every PR and every push to `main`. It doesn't run clippy or test the page in a browser, and `main` has no branch protection, so GitHub won't block a merge on its own. Never push directly to `main`.
 
 1. Work on a branch.
-2. Before opening a PR, make sure `cargo fmt --check`, `cargo test` and `cargo clippy --all-targets -- -D warnings` pass. For drawing or terminal changes, also do the terminal check above.
+2. Before opening a PR, make sure `cargo fmt --check`, `cargo test` and `cargo clippy --all-targets -- -D warnings` pass. For drawing, terminal or web changes, also do the matching check above.
 3. Open a PR that explains what changed, what was tested, and what wasn't.
 4. Wait for CI (`gh pr checks --watch`). Once it passes, you may merge without further sign-off: `gh pr merge --squash --delete-branch`
 

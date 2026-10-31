@@ -1,0 +1,382 @@
+:root {
+  color-scheme: dark;
+  --space: #0b0d17;
+  --panel: #171a2b;
+  --empty: #232741;
+  --text: #eef0fa;
+  --muted: #a4a9c6;
+  --accent: #ffd75f;
+  --slide-ms: 110ms;
+
+  /* Tile colors follow the terminal version's palette. */
+  --tile-1: #8a8a8a; --ink-1: #000;
+  --tile-2: #875f00; --ink-2: #fff8e1;
+  --tile-3: #007699; --ink-3: #fff;
+  --tile-4: #bcbcbc; --ink-4: #000;
+  --tile-5: #afd7ff; --ink-5: #000;
+  --tile-6: #5f5faf; --ink-6: #fff;
+  --tile-7: #ff5f00; --ink-7: #000;
+  --tile-8: #5f0000; --ink-8: #fff;
+  --tile-9: #8f45b8; --ink-9: #fff;
+  --tile-10: #ff87ff; --ink-10: #000;
+  --tile-11: #fff; --ink-11: #000;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--space);
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  color: var(--text);
+  background: var(--space);
+  font: 16px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+  overscroll-behavior: none;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  width: min(100%, 560px);
+  margin-inline: auto;
+  padding: max(14px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+}
+
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+h1 {
+  flex: 1 1 auto;
+  margin: 0;
+  color: var(--accent);
+  font-size: 1.6rem;
+  letter-spacing: 0.04em;
+}
+
+.stats {
+  display: flex;
+  gap: 6px;
+}
+
+.stat {
+  display: grid;
+  min-width: 68px;
+  padding: 3px 10px;
+  border-radius: 8px;
+  background: var(--panel);
+  text-align: center;
+}
+
+.stat span {
+  color: var(--muted);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+}
+
+.stat output {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+button {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #1a1400;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+button:hover {
+  filter: brightness(1.08);
+}
+
+button:focus-visible {
+  outline: 3px solid var(--text);
+  outline-offset: 2px;
+}
+
+/* Every tile is a square because the board is square and divides evenly. */
+.board {
+  position: relative;
+  container-type: inline-size;
+  aspect-ratio: 1;
+  width: min(100%, calc(100dvh - 170px));
+  min-width: min(100%, 280px);
+  margin-inline: auto;
+  border-radius: 12px;
+  background: var(--panel);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.layer {
+  --gap: 2.2cqw;
+  position: absolute;
+  inset: var(--gap);
+}
+
+.cells {
+  display: grid;
+  grid-template: repeat(4, 1fr) / repeat(4, 1fr);
+  gap: var(--gap);
+}
+
+.cells div {
+  border-radius: 6px;
+  background: var(--empty);
+}
+
+.tile {
+  position: absolute;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  justify-items: center;
+  /* Both sides use the same formula on a square layer, so content can't stretch a tile. */
+  width: calc((100% - 3 * var(--gap)) / 4);
+  height: calc((100% - 3 * var(--gap)) / 4);
+  overflow: hidden;
+  padding-block: 4% 7%;
+  border-radius: 6px;
+  background: var(--tile);
+  color: var(--ink);
+  transform: translate(
+    calc(var(--c) * (100% + var(--gap))),
+    calc(var(--r) * (100% + var(--gap)))
+  );
+  transition: transform var(--slide-ms) ease-out;
+}
+
+.tile .rank {
+  position: absolute;
+  top: 4%;
+  left: 8%;
+  font-size: clamp(9px, 2.2cqw, 13px);
+  font-weight: 700;
+  opacity: 0.8;
+}
+
+.tile .glyph {
+  align-self: center;
+  font-size: 8.5cqw;
+  line-height: 1;
+}
+
+.tile .name {
+  font-size: clamp(10px, 2.7cqw, 15px);
+  font-weight: 700;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.tile.pop {
+  z-index: 1;
+  animation: pop 160ms ease-out;
+}
+
+.tile.spawn {
+  animation: spawn 140ms ease-out;
+}
+
+@keyframes pop {
+  50% { scale: 1.12; }
+}
+
+@keyframes spawn {
+  from { scale: 0.3; opacity: 0; }
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 12px;
+  background: #0b0d17e6;
+  text-align: center;
+}
+
+.overlay[hidden] {
+  display: none;
+}
+
+.overlay h2 {
+  margin: 0;
+  color: var(--accent);
+  font-size: clamp(1.4rem, 7cqw, 2.2rem);
+}
+
+.overlay p {
+  margin: 0;
+}
+
+.overlay-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+#keep-going[hidden] {
+  display: none;
+}
+
+.help {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+kbd {
+  padding: 0 5px;
+  border: 1px solid var(--muted);
+  border-radius: 4px;
+  font: inherit;
+}
+
+.tiers h2 {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.tiers ol {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 4px 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tiers li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.tiers li .number {
+  min-width: 2ch;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.tiers li.reached {
+  color: var(--text);
+}
+
+.tiers li.highest {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.fatal {
+  max-width: 40ch;
+  margin: 30px auto;
+  padding-inline: 16px;
+  text-align: center;
+}
+
+/* Phones: keep the title, scores and button on one line where they fit. */
+@media (max-width: 430px) {
+  .top {
+    gap: 8px;
+  }
+
+  h1 {
+    font-size: 1.25rem;
+    letter-spacing: 0;
+  }
+
+  .stat {
+    min-width: 54px;
+    padding-inline: 6px;
+  }
+
+  .top button {
+    padding-inline: 10px;
+    font-size: 0.9rem;
+  }
+}
+
+.help .touch-help {
+  display: none;
+}
+
+/* Touch screens have no arrow keys to mention. */
+@media (pointer: coarse) {
+  .help .key-help {
+    display: none;
+  }
+
+  .help .touch-help {
+    display: inline;
+  }
+}
+
+/* Wide screens: the tile list sits beside the board. */
+@media (min-width: 800px) {
+  .app {
+    grid-template-columns: minmax(0, 560px) 190px;
+    grid-template-areas:
+      "top top"
+      "board tiers"
+      "help help";
+    justify-content: center;
+    width: min(100%, 800px);
+    column-gap: 28px;
+  }
+
+  .top { grid-area: top; }
+  .board { grid-area: board; }
+  .help { grid-area: help; }
+  .tiers { grid-area: tiers; }
+
+  .tiers ol {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile {
+    transition: none;
+  }
+
+  .tile.pop,
+  .tile.spawn {
+    animation: none;
+  }
+}

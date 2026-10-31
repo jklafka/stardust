@@ -249,7 +249,6 @@ impl Game {
 mod tests {
     use super::Direction::*;
     use super::*;
-    use crate::screen::char_width;
 
     const T: u8 = MAX_RANK;
     const FULL: Board = [[1, 2, 1, 2], [2, 1, 2, 1], [1, 2, 1, 2], [2, 1, 2, 1]];
@@ -286,13 +285,6 @@ mod tests {
     fn values_double_up_the_hierarchy() {
         for rank in 1..=MAX_RANK {
             assert_eq!(tile_value(rank), 2u32.pow(rank as u32 - 1));
-        }
-    }
-
-    #[test]
-    fn glyphs_are_double_width() {
-        for tier in &TIERS {
-            assert_eq!(char_width(tier.glyph), 2, "{}", tier.name);
         }
     }
 

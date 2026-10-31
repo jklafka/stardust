@@ -1,0 +1,5 @@
+[package]
+name = "stardust-core"
+version = "0.1.0"
+edition = "2024"
+description = "The rules of Stardust, shared by the terminal and web versions."

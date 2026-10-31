@@ -3,10 +3,10 @@
 use std::io::ErrorKind;
 
 use crate::best;
-use crate::game::{Cell, Direction, Game, MoveResult, SIZE, TIERS, tier_of};
 use crate::input::{Event, parse_input, swipe_direction};
 use crate::screen::{Screen, Style, text_width};
 use crate::terminal;
+use stardust_core::{Cell, Direction, Game, MoveResult, SIZE, TIERS, tier_of};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Layout {

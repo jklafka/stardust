@@ -1,0 +1,11 @@
+[package]
+name = "stardust-web"
+version = "0.1.0"
+edition = "2024"
+description = "WebAssembly exports that let a web page play Stardust."
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+stardust-core = { path = "../core" }

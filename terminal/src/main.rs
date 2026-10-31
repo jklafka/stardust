@@ -3,8 +3,8 @@ use std::process::ExitCode;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use stardust::app::App;
-use stardust::game::Game;
 use stardust::{best, terminal};
+use stardust_core::Game;
 
 const USAGE: &str = "\
 Merge cosmic matter from Dust up to a Universe.
