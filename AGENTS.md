@@ -68,7 +68,7 @@ Keep game rules in `core` so both versions share them and they can be tested wit
 
 **Input and animation**
 - Queued input skips animation, so fast play never lags.
-- Keep motion calm. The maintainer finds fast or scaling animation uncomfortable, so use no scale, bounce or flash. Web slides take about 200ms.
+- Keep motion calm. The maintainer finds fast or scaling animation uncomfortable, so use no scale, bounce or flash. Slides take about 300ms in both versions, and merged tiles appear instantly when the slide ends. On the web, the end of a game fades in after the last move, and the board grays only slightly.
 
 **Web**
 - Tiles must stay square at every screen size, including phones. Their width and height use the same formula so content can't stretch them.
@@ -97,7 +97,7 @@ Also check the compact layout with `-x 46 -y 25`. tmux can't show how colors, em
 
 ## Checking changes in a browser
 
-Run web changes in a real browser, at a desktop size and a phone size, and try both keys and touch. Chrome's device emulation is useful, but it isn't the same as a real phone, so say so in the PR if you haven't used one.
+Run web changes in a real browser, at a desktop size and a phone size, and try both keys and touch. To check an animation, sample positions frame by frame: timing and end states can look right when a tile actually jumps. Chrome's device emulation is useful, but it isn't the same as a real phone, so say so in the PR if you haven't used one.
 
 ## Deployment
 
