@@ -40,6 +40,22 @@
   --tile-11: #ffd700; --ink-11: #000;
 }
 
+/* The fantasy theme only swaps the tile colors. Each background sets off the
+   class's sprite, and the ink is readable on it. */
+:root[data-theme="fantasy"] {
+  --tile-1: #d7d7af; --ink-1: #000;
+  --tile-2: #87afaf; --ink-2: #000;
+  --tile-3: #5f5f87; --ink-3: #fff;
+  --tile-4: #d7af87; --ink-4: #000;
+  --tile-5: #008787; --ink-5: #fff;
+  --tile-6: #005f87; --ink-6: #fff;
+  --tile-7: #ffd787; --ink-7: #000;
+  --tile-8: #af5f87; --ink-8: #fff;
+  --tile-9: #af87af; --ink-9: #000;
+  --tile-10: #870000; --ink-10: #fff;
+  --tile-11: #ffffaf; --ink-11: #000;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -192,6 +208,32 @@ button:focus-visible {
   align-self: center;
   font-size: 8.5cqw;
   line-height: 1;
+}
+
+/* Whole multiples of 24px keep every sprite pixel the same size. Browsers without
+   round() use the line before it, where pixels can differ by one. */
+.sprite {
+  height: 24px;
+  aspect-ratio: 2 / 3;
+  image-rendering: pixelated;
+}
+
+.tile .sprite {
+  align-self: center;
+  height: max(24px, 16cqw);
+  height: max(24px, round(down, 16.5cqw, 24px));
+}
+
+/* On sharper screens, half steps are still whole device pixels. */
+@media (min-resolution: 2dppx) {
+  .tile .sprite {
+    height: max(24px, round(down, 16.5cqw, 12px));
+  }
+}
+
+/* A sprite needs more of the tile than a glyph does. */
+.tile.has-sprite {
+  padding-block: 1cqw 1.4cqw;
 }
 
 .tile .name {

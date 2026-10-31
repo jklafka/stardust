@@ -36,9 +36,9 @@ Then open <http://localhost:8000>. After building, `web/www` is a complete stati
 
 ## How to play
 
-Every move slides all the tiles as far as they can go in one direction. When two matching tiles collide, they merge into the next tile up, and a new Dust or Rock tile (Seed or Sprout in the Plants theme) then appears in an empty cell.
+Every move slides all the tiles as far as they can go in one direction. When two matching tiles collide, they merge into the next tile up, and a new Dust or Rock tile (Seed or Sprout in the Plants theme, Bard or Rogue in the Fantasy theme) then appears in an empty cell.
 
-Make a Universe (an Oak in the Plants theme) to win, then keep playing for a higher score if you like. The game ends when the grid is full and no neighboring tiles can merge.
+Make a Universe (an Oak in the Plants theme, a Wizard in the Fantasy theme) to win, then keep playing for a higher score if you like. The game ends when the grid is full and no neighboring tiles can merge.
 
 | Input | Action |
 |---|---|
@@ -55,7 +55,7 @@ In a terminal, swipes only work if your terminal app sends touch as mouse input,
 
 Merging two tiles of one rank makes one tile of the next rank, and scores the points shown for the new tile. The top tile can't merge, so two of them can't combine.
 
-The game has two themes, Space and Plants, which change only the names and pictures of the tiles. Press `t` to switch, when the game allows it. The points are the same in both themes.
+The game has three themes, Space, Plants and Fantasy, which change only the names and pictures of the tiles. Press `t` to switch, when the game allows it. The points are the same in every theme.
 
 #### Space
 
@@ -89,11 +89,29 @@ The game has two themes, Space and Plants, which change only the names and pictu
 | 10 | 🌲 Pine | 512 |
 | 11 | 🌳 Oak | 1024 |
 
+#### Fantasy
+
+The web version draws each class as a 16-bit style pixel-art sprite. The terminal's tiles are too small for sprites, so it uses the emoji shown here.
+
+| Rank | Tile | Points |
+|---:|---|---:|
+| 1 | 🎻 Bard | Starting tile |
+| 2 | 🥷 Rogue | 2 |
+| 3 | 🤺 Fighter | 4 |
+| 4 | 🏹 Ranger | 8 |
+| 5 | 🥋 Monk | 16 |
+| 6 | 🪓 Barbarian | 32 |
+| 7 | 🌿 Druid | 64 |
+| 8 | 📿 Cleric | 128 |
+| 9 | 💀 Warlock | 256 |
+| 10 | 🏰 Paladin | 512 |
+| 11 | 🧙 Wizard | 1024 |
+
 New tiles are the first tile 90% of the time and the second 10% of the time (Dust or Rock in Space).
 
 ### Good to know
 
-- **Best score:** the terminal version saves your best score in `~/.stardust_best`, and the web version saves it in your browser. The two aren't linked. Either way, one best score is shared across both themes.
+- **Best score:** the terminal version saves your best score in `~/.stardust_best`, and the web version saves it in your browser. The two aren't linked. Either way, one best score is shared across all themes.
 - **Theme:** the terminal version remembers your theme in `~/.stardust_theme`, and the web version remembers it in your browser.
 - **Saved game:** the web version saves the game in progress in your browser, so it's still there after a refresh. The terminal version doesn't save games, so quitting ends the current one.
 - **Terminal size:** the full layout, with a side panel listing every tile, needs 71x24. Narrower terminals such as phones get a compact layout that needs 46x25.
@@ -124,6 +142,7 @@ The repo is a Cargo workspace, with the game rules shared by both versions:
 | `terminal/src/theme.rs` | Loading and saving the chosen theme |
 | `terminal/src/main.rs` | Argument parsing and startup |
 | `web/src/lib.rs` | Functions exported to the page from WebAssembly |
+| `web/src/sprites.rs` | Pixel art for the Fantasy theme |
 | `web/www/app.js` | Page logic: rendering, animation, keys, swipes, saved game, best score and theme |
 | `web/index.template.html`, `web/www/style.css` | The page itself, including the theme colors |
 | `web/www/404.html` | The page shown for unknown addresses |
