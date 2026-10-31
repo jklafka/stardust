@@ -2,7 +2,7 @@
 // other side of this interface, so change the two together.
 
 const SIZE = 4;
-const SLIDE_MS = 110; // Keep in step with --slide-ms in style.css.
+const SLIDE_MS = 200; // Keep in step with --slide-ms in style.css.
 const SWIPE_MIN_PX = 24;
 const BEST_KEY = "stardust-best";
 const GAME_KEY = "stardust-game";
@@ -130,7 +130,7 @@ function cellKey(packed) {
   return `${packed & 15},${(packed >> 4) & 15}`;
 }
 
-// Draws the board at rest, with pops and spawns from the move that just ended.
+// Draws the board at rest, with merge and spawn fades from the move that just ended.
 function renderTiles(effects) {
   const tiles = [];
   for (let r = 0; r < SIZE; r += 1) {
@@ -139,7 +139,7 @@ function renderTiles(effects) {
       if (rank) {
         const key = `${r},${c}`;
         let effect = null;
-        if (effects?.merged.has(key)) effect = "pop";
+        if (effects?.merged.has(key)) effect = "merge";
         else if (effects?.spawned === key) effect = "spawn";
         tiles.push(createTile(rank, r, c, effect));
       }
