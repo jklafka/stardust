@@ -2,7 +2,7 @@
 // other side of this interface, so change the two together.
 
 const SIZE = 4;
-const SLIDE_MS = 300; // Keep in step with --slide-ms in style.css.
+const SLIDE_MS = 200; // Keep in step with --slide-ms in style.css.
 const SWIPE_MIN_PX = 24;
 const BEST_KEY = "stardust-best";
 const GAME_KEY = "stardust-game";

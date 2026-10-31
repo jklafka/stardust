@@ -68,7 +68,7 @@ Keep game rules in `core` so both versions share them and they can be tested wit
 
 **Input and animation**
 - Queued input skips animation, so fast play never lags.
-- Keep motion calm. The maintainer finds fast or scaling animation uncomfortable, so use no scale, bounce or flash. Slides take about 300ms in both versions, and merged tiles appear instantly when the slide ends. On the web, the end of a game fades in after the last move, and the board grays only slightly.
+- Keep motion calm. The maintainer finds fast or scaling animation uncomfortable, so use no scale, bounce or flash. Slides take about 200ms in both versions, because the maintainer found 300ms sluggish, and merged tiles appear instantly when the slide ends. On the web, the end of a game fades in after the last move, and the board grays only slightly.
 
 **Web**
 - Tiles must stay square at every screen size, including phones. Their width and height use the same formula so content can't stretch them.
