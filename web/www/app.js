@@ -2,7 +2,7 @@
 // other side of this interface, so change the two together.
 
 const SIZE = 4;
-const SLIDE_MS = 200; // Keep in step with --slide-ms in style.css.
+const SLIDE_MS = 300; // Keep in step with --slide-ms in style.css.
 const SWIPE_MIN_PX = 24;
 const BEST_KEY = "stardust-best";
 const GAME_KEY = "stardust-game";
@@ -22,12 +22,12 @@ const tilesLayer = byId("tiles");
 const overlay = byId("overlay");
 const keepGoing = byId("keep-going");
 const playAgain = byId("play-again");
+const themeSelect = byId("theme-select");
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
 
 let game;
 let themes = [];
 let currentTheme = 0;
-let themeButtons = [];
 let settleTimer = null;
 let pendingEffects = null;
 let overlayKind = null;
@@ -173,8 +173,7 @@ function renderTiles(effects) {
       if (rank) {
         const key = `${r},${c}`;
         let effect = null;
-        if (effects?.merged.has(key)) effect = "merge";
-        else if (effects?.spawned === key) effect = "spawn";
+        if (effects?.spawned === key) effect = "spawn";
         tiles.push(createTile(rank, r, c, effect));
       }
     }
@@ -204,6 +203,7 @@ function renderOverlay() {
   const hadFocus = overlay.contains(document.activeElement);
   overlayKind = kind;
   overlay.hidden = !kind;
+  board.classList.toggle("game-over", kind === "over");
   if (!kind) {
     if (hadFocus) board.focus();
     return;
@@ -241,10 +241,8 @@ function renderTierList() {
 function renderThemeControl() {
   const allowed = game.stardust_can_switch_theme() === 1;
   document.documentElement.dataset.theme = themes[currentTheme].id;
-  themeButtons.forEach((button, index) => {
-    button.setAttribute("aria-pressed", String(index === currentTheme));
-    button.disabled = !allowed;
-  });
+  themeSelect.value = String(currentTheme);
+  themeSelect.disabled = !allowed;
   byId("theme-note").hidden = allowed;
 }
 
@@ -275,7 +273,12 @@ function settle() {
 }
 
 function move(direction) {
-  settle();
+  // Tiles can only slide from a position the browser has already drawn. At rest they
+  // have one. If a slide is running, finish it and make the browser register the result.
+  if (settleTimer !== null) {
+    settle();
+    tilesLayer.getBoundingClientRect();
+  }
   const bestBefore = game.stardust_best();
   if (!game.stardust_try_move(direction)) return;
   saveGame();
@@ -290,12 +293,8 @@ function move(direction) {
     if (tile) placeTile(tile, (slide >> 8) & 15, (slide >> 12) & 15);
   }
 
-  const merged = new Set();
-  for (let i = 0; i < game.stardust_merged_count(); i += 1) {
-    merged.add(cellKey(game.stardust_merged(i)));
-  }
   const spawned = game.stardust_spawned();
-  pendingEffects = { merged, spawned: spawned < 0 ? null : cellKey(spawned) };
+  pendingEffects = { spawned: spawned < 0 ? null : cellKey(spawned) };
 
   byId("score").textContent = game.stardust_score();
   byId("best").textContent = game.stardust_best();
@@ -322,6 +321,7 @@ function continuePlaying() {
 
 function onKeyDown(event) {
   if (event.ctrlKey || event.metaKey || event.altKey) return;
+  if (event.target === themeSelect) return; // Its own keys pick a theme, not a move.
   if (event.key in DIRECTIONS) {
     event.preventDefault();
     move(DIRECTIONS[event.key]);
@@ -364,15 +364,16 @@ function buildPage() {
   board.tabIndex = -1;
 
   renderTierList();
-  themeButtons = themes.map((theme, index) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "theme-button";
-    button.textContent = theme.name;
-    button.addEventListener("click", () => chooseTheme(index));
-    return button;
+  themeSelect.append(
+    ...themes.map((theme, index) => new Option(theme.name, String(index))),
+  );
+  themeSelect.addEventListener("change", () => {
+    chooseTheme(Number(themeSelect.value));
+    themeSelect.value = String(currentTheme);
+    // Hand the keyboard back to the game.
+    if (overlayKind) (overlayKind === "win" ? keepGoing : playAgain).focus();
+    else themeSelect.blur();
   });
-  byId("theme-buttons").append(...themeButtons);
 
   byId("new-game").addEventListener("click", newGame);
   playAgain.addEventListener("click", newGame);

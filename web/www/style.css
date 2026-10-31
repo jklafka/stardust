@@ -6,7 +6,9 @@
   --text: #eef0fa;
   --muted: #a4a9c6;
   --accent: #ffd75f;
-  --slide-ms: 200ms;
+  --slide-ms: 300ms;
+  --ending-delay: 300ms; /* Lets the last move finish first. */
+  --ending-fade: 700ms;
 
   /* Tile colors follow the terminal version's palette. */
   --tile-1: #8a8a8a; --ink-1: #000;
@@ -174,7 +176,7 @@ button:focus-visible {
     calc(var(--c) * (100% + var(--gap))),
     calc(var(--r) * (100% + var(--gap)))
   );
-  transition: transform var(--slide-ms) ease-in-out;
+  transition: transform var(--slide-ms) cubic-bezier(0.33, 0, 0.2, 1);
 }
 
 .tile .rank {
@@ -199,16 +201,8 @@ button:focus-visible {
   white-space: nowrap;
 }
 
-.tile.merge {
-  animation: merge-settle 200ms ease-in-out;
-}
-
 .tile.spawn {
   animation: spawn 250ms ease-in-out;
-}
-
-@keyframes merge-settle {
-  from { opacity: 0.75; }
 }
 
 @keyframes spawn {
@@ -225,18 +219,38 @@ button:focus-visible {
   gap: 10px;
   padding: 16px;
   border-radius: 12px;
-  background: #0b0d17e6;
+  background: #0b0d1740;
   text-align: center;
+  animation: ending-in var(--ending-fade) ease-in-out var(--ending-delay) both;
 }
 
 .overlay[hidden] {
   display: none;
 }
 
+/* A card keeps the message readable while the board stays visible around it. */
+.overlay-card {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 18px 20px;
+  border-radius: 12px;
+  background: #0b0d17eb;
+}
+
+.board.game-over #tiles {
+  filter: grayscale(0.6) brightness(0.85);
+  transition: filter var(--ending-fade) ease-in-out var(--ending-delay);
+}
+
+@keyframes ending-in {
+  from { opacity: 0; }
+}
+
 .overlay h2 {
   margin: 0;
   color: var(--accent);
-  font-size: clamp(1.4rem, 7cqw, 2.2rem);
+  font-size: clamp(1.3rem, 6cqw, 2rem);
 }
 
 .overlay p {
@@ -276,33 +290,29 @@ button:focus-visible {
   text-transform: uppercase;
 }
 
-.theme-buttons {
-  display: flex;
-  gap: 2px;
-  padding: 2px;
-  border-radius: 10px;
+/* 16px text stops phones zooming in when the control is focused. */
+.theme-select {
+  min-width: 130px;
+  min-height: 44px;
+  padding-inline: 10px;
+  border: 1px solid var(--muted);
+  border-radius: 8px;
   background: var(--panel);
-}
-
-.theme-button {
-  min-width: 88px;
-  background: transparent;
   color: var(--text);
+  font: inherit;
+  font-size: 16px;
+  cursor: pointer;
 }
 
-.theme-button[aria-pressed="true"] {
-  background: var(--accent);
-  color: #1a1400;
+.theme-select:focus-visible {
+  outline: 3px solid var(--text);
+  outline-offset: 2px;
 }
 
-.theme-button:disabled {
-  cursor: default;
-  filter: none;
-}
-
-.theme-button:disabled:not([aria-pressed="true"]) {
+.theme-select:disabled {
+  border-color: transparent;
   color: var(--muted);
-  opacity: 0.6;
+  cursor: default;
 }
 
 .theme-note {
@@ -450,8 +460,12 @@ kbd {
     transition: none;
   }
 
-  .tile.merge,
-  .tile.spawn {
+  .tile.spawn,
+  .overlay {
     animation: none;
+  }
+
+  .board.game-over #tiles {
+    transition: none;
   }
 }

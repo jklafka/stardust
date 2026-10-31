@@ -11,7 +11,6 @@ use stardust_core::{Cell, Direction, Game, MAX_RANK, SIZE, Slide, THEMES};
 struct Session {
     game: Game,
     slides: Vec<Slide>,
-    merged: Vec<Cell>,
     spawned: Option<Cell>,
 }
 
@@ -20,7 +19,6 @@ impl Session {
         Session {
             game: Game::new(seed as u64, best),
             slides: Vec::new(),
-            merged: Vec::new(),
             spawned: None,
         }
     }
@@ -52,14 +50,12 @@ impl Session {
         self.game.continued = continued;
         self.game.moves = moves;
         self.slides.clear();
-        self.merged.clear();
         self.spawned = None;
         true
     }
 
     fn try_move(&mut self, direction: Direction) -> bool {
         self.slides.clear();
-        self.merged.clear();
         self.spawned = None;
         if self.game.showing_win() || self.game.over() {
             return false;
@@ -68,7 +64,6 @@ impl Session {
             return false;
         };
         self.slides = result.slides;
-        self.merged = result.merged;
         self.spawned = spawned;
         true
     }
@@ -149,7 +144,6 @@ pub extern "C" fn stardust_new_game() {
     with_session(|session| {
         session.game.reset();
         session.slides.clear();
-        session.merged.clear();
         session.spawned = None;
     });
 }
@@ -249,23 +243,6 @@ pub extern "C" fn stardust_slide_count() -> u32 {
 #[unsafe(no_mangle)]
 pub extern "C" fn stardust_slide(index: u32) -> u32 {
     with_session(|session| session.slides.get(index as usize).map_or(0, pack_slide))
-}
-
-/// How many merges the last move made. See `pack_cell`.
-#[unsafe(no_mangle)]
-pub extern "C" fn stardust_merged_count() -> u32 {
-    with_session(|session| session.merged.len() as u32)
-}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn stardust_merged(index: u32) -> u32 {
-    with_session(|session| {
-        session
-            .merged
-            .get(index as usize)
-            .copied()
-            .map_or(0, pack_cell)
-    })
 }
 
 /// The cell of the tile the last move spawned (see `pack_cell`), or -1 if none.
@@ -427,7 +404,6 @@ mod tests {
         let mut session = session([[1, 1, 0, 0], [0; 4], [0; 4], [0; 4]]);
         assert!(session.try_move(Direction::Left));
         assert_eq!(session.slides.len(), 2);
-        assert_eq!(session.merged, [(0, 0)]);
         assert!(session.spawned.is_some());
     }
 
@@ -438,7 +414,6 @@ mod tests {
         session.game.board = [[1, 2, 3, 4], [0; 4], [0; 4], [0; 4]];
         assert!(!session.try_move(Direction::Left));
         assert!(session.slides.is_empty());
-        assert!(session.merged.is_empty());
         assert_eq!(session.spawned, None);
     }
 
