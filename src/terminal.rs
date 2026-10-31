@@ -74,10 +74,12 @@ pub fn input_ready(timeout_ms: u32) -> bool {
 /// Reads available input. Returns Ok(0) when the terminal has closed.
 pub fn read_input(buffer: &mut [u8]) -> io::Result<usize> {
     // SAFETY: The pointer and length describe a valid, writable buffer.
-    let count = unsafe {
-        libc::read(libc::STDIN_FILENO, buffer.as_mut_ptr().cast(), buffer.len())
-    };
-    if count < 0 { Err(io::Error::last_os_error()) } else { Ok(count as usize) }
+    let count = unsafe { libc::read(libc::STDIN_FILENO, buffer.as_mut_ptr().cast(), buffer.len()) };
+    if count < 0 {
+        Err(io::Error::last_os_error())
+    } else {
+        Ok(count as usize)
+    }
 }
 
 /// Puts the terminal in game mode, and restores it when dropped, including on panic.

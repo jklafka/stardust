@@ -12,7 +12,12 @@ pub struct Tier {
 }
 
 const fn tier(name: &'static str, glyph: char, bg: u8, fg: u8) -> Tier {
-    Tier { name, glyph, bg, fg }
+    Tier {
+        name,
+        glyph,
+        bg,
+        fg,
+    }
 }
 
 /// Index + 1 is the tile's rank. Two tiles of rank n merge into rank n + 1.
@@ -78,8 +83,12 @@ impl MoveResult {
 
 /// Applies a move. Each tile merges at most once; top-rank tiles never merge.
 pub fn slide(board: &Board, direction: Direction) -> MoveResult {
-    let mut result =
-        MoveResult { board: [[0; SIZE]; SIZE], slides: Vec::new(), merged: Vec::new(), gained: 0 };
+    let mut result = MoveResult {
+        board: [[0; SIZE]; SIZE],
+        slides: Vec::new(),
+        merged: Vec::new(),
+        gained: 0,
+    };
     for line in 0..SIZE {
         // Cells ordered from the wall the tiles are moving toward.
         let cell_at = |i: usize| match direction {
@@ -98,9 +107,7 @@ pub fn slide(board: &Board, direction: Direction) -> MoveResult {
             }
             let previous = (target > 0).then(|| cell_at(target - 1));
             let to = match previous {
-                Some(to)
-                    if mergeable && rank < MAX_RANK && result.board[to.0][to.1] == rank =>
-                {
+                Some(to) if mergeable && rank < MAX_RANK && result.board[to.0][to.1] == rank => {
                     result.board[to.0][to.1] = rank + 1;
                     result.merged.push(to);
                     result.gained += tile_value(rank + 1);
@@ -260,7 +267,12 @@ mod tests {
     }
 
     fn total(board: &Board) -> u32 {
-        board.iter().flatten().filter(|&&rank| rank != 0).map(|&rank| tile_value(rank)).sum()
+        board
+            .iter()
+            .flatten()
+            .filter(|&&rank| rank != 0)
+            .map(|&rank| tile_value(rank))
+            .sum()
     }
 
     #[test]
