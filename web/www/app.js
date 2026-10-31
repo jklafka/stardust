@@ -7,7 +7,13 @@ const SWIPE_MIN_PX = 24;
 const BEST_KEY = "stardust-best";
 const GAME_KEY = "stardust-game";
 const GAME_VERSION = 1;
-const DIRECTIONS = { ArrowUp: 0, ArrowDown: 1, ArrowLeft: 2, ArrowRight: 3 };
+const DIRECTIONS = {
+  ArrowUp: 0, ArrowDown: 1, ArrowLeft: 2, ArrowRight: 3,
+  w: 0, W: 0, i: 0, I: 0,
+  s: 1, S: 1, k: 1, K: 1,
+  a: 2, A: 2, j: 2, J: 2,
+  d: 3, D: 3, l: 3, L: 3,
+};
 
 const byId = (id) => document.getElementById(id);
 const board = byId("board");

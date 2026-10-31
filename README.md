@@ -38,7 +38,7 @@ Make a Universe to win, then keep playing for a higher score if you like. The ga
 
 | Input | Action |
 |---|---|
-| Arrow keys | Move tiles |
+| Arrow keys, `w` `a` `s` `d`, or `i` `j` `k` `l` (either case) | Move tiles: `w`/`i` up, `s`/`k` down, `a`/`j` left, `d`/`l` right |
 | Mouse drag or swipe | Move tiles in the direction of the drag |
 | `n` | Start a new game immediately |
 | `c` | Keep playing after winning |

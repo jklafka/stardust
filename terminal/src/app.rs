@@ -251,7 +251,7 @@ impl App {
             let status_x = ox + layout.width as i32 - status.len() as i32;
             self.screen.put(status_x, oy, &status, Style::default());
         }
-        let controls = "Arrows or swipe: move   n: new   q: quit";
+        let controls = "Arrows/WASD/IJKL/swipe: move  n: new  q: quit";
         let controls_x = ox + (layout.board_w() as i32 - controls.len() as i32) / 2;
         self.screen.put(
             controls_x,
