@@ -85,10 +85,8 @@ const fn bold(color: u8) -> Style {
     }
 }
 
-const SLIDE_STEPS: u32 = 6;
-const SLIDE_FRAME_MS: u32 = 14;
-const POP_MS: u32 = 60;
-const SPAWN_MS: u32 = 50;
+const SLIDE_STEPS: u32 = 9;
+const SLIDE_FRAME_MS: u32 = 20;
 
 pub struct App {
     pub game: Game,
@@ -155,7 +153,7 @@ impl App {
         self.cell_xy(layout, r as f32, c as f32)
     }
 
-    fn draw_tile(&mut self, layout: &Layout, (x, y): (i32, i32), rank: u8, grow: i32) {
+    fn draw_tile(&mut self, layout: &Layout, (x, y): (i32, i32), rank: u8) {
         let tier = tier_of(rank);
         let (w, h) = (layout.tile_w as i32, layout.tile_h);
         let text = Style {
@@ -164,8 +162,7 @@ impl App {
             bold: false,
         };
         let strong = Style { bold: true, ..text };
-        self.screen
-            .fill(x - grow, y, (w + 2 * grow) as usize, h, tier.bg);
+        self.screen.fill(x, y, w as usize, h, tier.bg);
         self.screen.put(x + 1, y, &rank.to_string(), strong);
         self.screen.put(
             x + (w - 2) / 2,
@@ -175,25 +172,6 @@ impl App {
         );
         let name_x = x + (w - text_width(tier.name) as i32) / 2;
         self.screen.put(name_x, y + 3, tier.name, strong);
-    }
-
-    /// A spawning tile: small, holding only its glyph.
-    fn draw_small_tile(&mut self, layout: &Layout, (x, y): (i32, i32), rank: u8) {
-        let tier = tier_of(rank);
-        let (w, h) = (layout.tile_w as i32, layout.tile_h);
-        let text = Style {
-            fg: Some(tier.fg),
-            bg: Some(tier.bg),
-            bold: false,
-        };
-        self.screen
-            .fill(x + 2, y + 1, w as usize - 4, h - 2, tier.bg);
-        self.screen.put(
-            x + (w - 2) / 2,
-            y + 2,
-            tier.glyph.encode_utf8(&mut [0; 4]),
-            text,
-        );
     }
 
     fn draw_chrome(&mut self, layout: &Layout) {
@@ -293,26 +271,17 @@ impl App {
         }
     }
 
-    /// Paints the resting board, with any popping tiles enlarged and a spawning tile small.
-    fn compose_board(&mut self, layout: &Layout, pops: &[Cell], small: Option<Cell>) {
+    /// Paints the resting board.
+    fn compose_board(&mut self, layout: &Layout) {
         self.draw_chrome(layout);
         for r in 0..SIZE {
             for c in 0..SIZE {
                 let rank = self.game.board[r][c];
-                if rank != 0 && small != Some((r, c)) && !pops.contains(&(r, c)) {
+                if rank != 0 {
                     let position = self.cell_pos(layout, (r, c));
-                    self.draw_tile(layout, position, rank, 0);
+                    self.draw_tile(layout, position, rank);
                 }
             }
-        }
-        // Drawn last so a popping tile sits above its neighbours.
-        for &(r, c) in pops {
-            let position = self.cell_pos(layout, (r, c));
-            self.draw_tile(layout, position, self.game.board[r][c], 1);
-        }
-        if let Some((r, c)) = small {
-            let position = self.cell_pos(layout, (r, c));
-            self.draw_small_tile(layout, position, self.game.board[r][c]);
         }
     }
 
@@ -333,7 +302,7 @@ impl App {
             self.flush();
             return;
         };
-        self.compose_board(&layout, &[], None);
+        self.compose_board(&layout);
         let (score, best) = (self.game.score, self.game.best);
         if self.game.showing_win() {
             self.draw_overlay(
@@ -364,7 +333,7 @@ impl App {
         !terminal::input_ready(ms)
     }
 
-    fn animate(&mut self, result: &MoveResult, spawned: Option<Cell>) {
+    fn animate(&mut self, result: &MoveResult) {
         let Some(layout) = self.layout else { return };
         if self.queued {
             return;
@@ -377,21 +346,11 @@ impl App {
                 let r = slide.from.0 as f32 + (slide.to.0 as f32 - slide.from.0 as f32) * t;
                 let c = slide.from.1 as f32 + (slide.to.1 as f32 - slide.from.1 as f32) * t;
                 let position = self.cell_xy(&layout, r, c);
-                self.draw_tile(&layout, position, slide.rank, 0);
+                self.draw_tile(&layout, position, slide.rank);
             }
             if !self.frame(SLIDE_FRAME_MS) {
                 return;
             }
-        }
-        if !result.merged.is_empty() {
-            self.compose_board(&layout, &result.merged, spawned);
-            if !self.frame(POP_MS) {
-                return;
-            }
-        }
-        if spawned.is_some() {
-            self.compose_board(&layout, &[], spawned);
-            self.frame(SPAWN_MS);
         }
     }
 
@@ -400,13 +359,13 @@ impl App {
             return;
         }
         let best_before = self.game.best;
-        let Some((result, spawned)) = self.game.try_move(direction) else {
+        let Some((result, _)) = self.game.try_move(direction) else {
             return;
         };
         if self.game.best != best_before {
             best::save(self.game.best);
         }
-        self.animate(&result, spawned);
+        self.animate(&result);
     }
 
     /// Returns false when the game should exit.

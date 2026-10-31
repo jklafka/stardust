@@ -6,7 +6,7 @@
   --text: #eef0fa;
   --muted: #a4a9c6;
   --accent: #ffd75f;
-  --slide-ms: 110ms;
+  --slide-ms: 200ms;
 
   /* Tile colors follow the terminal version's palette. */
   --tile-1: #8a8a8a; --ink-1: #000;
@@ -158,7 +158,7 @@ button:focus-visible {
     calc(var(--c) * (100% + var(--gap))),
     calc(var(--r) * (100% + var(--gap)))
   );
-  transition: transform var(--slide-ms) ease-out;
+  transition: transform var(--slide-ms) ease-in-out;
 }
 
 .tile .rank {
@@ -183,21 +183,20 @@ button:focus-visible {
   white-space: nowrap;
 }
 
-.tile.pop {
-  z-index: 1;
-  animation: pop 160ms ease-out;
+.tile.merge {
+  animation: merge-settle 200ms ease-in-out;
 }
 
 .tile.spawn {
-  animation: spawn 140ms ease-out;
+  animation: spawn 250ms ease-in-out;
 }
 
-@keyframes pop {
-  50% { scale: 1.12; }
+@keyframes merge-settle {
+  from { opacity: 0.75; }
 }
 
 @keyframes spawn {
-  from { scale: 0.3; opacity: 0; }
+  from { opacity: 0; }
 }
 
 .overlay {
@@ -375,7 +374,7 @@ kbd {
     transition: none;
   }
 
-  .tile.pop,
+  .tile.merge,
   .tile.spawn {
     animation: none;
   }
