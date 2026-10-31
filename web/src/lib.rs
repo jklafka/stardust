@@ -6,7 +6,7 @@
 
 use std::sync::Mutex;
 
-use stardust_core::{Cell, Direction, Game, SIZE, Slide, TIERS};
+use stardust_core::{Cell, Direction, Game, MAX_RANK, SIZE, Slide, TIERS};
 
 struct Session {
     game: Game,
@@ -23,6 +23,28 @@ impl Session {
             merged: Vec::new(),
             spawned: None,
         }
+    }
+
+    /// Replaces the running game with a saved one. Returns false and changes
+    /// nothing if the saved state is impossible. The random generator keeps
+    /// its fresh seed. The best score is raised to at least the saved score.
+    fn restore(&mut self, saved: &Staging, score: u32, won: bool, continued: bool) -> bool {
+        let all_set = saved.filled == u16::MAX;
+        let empty = saved.cells.iter().all(|&rank| rank == 0);
+        if saved.bad || !all_set || empty || (continued && !won) {
+            return false;
+        }
+        for (i, &rank) in saved.cells.iter().enumerate() {
+            self.game.board[i / SIZE][i % SIZE] = rank;
+        }
+        self.game.score = score;
+        self.game.best = self.game.best.max(score);
+        self.game.won = won;
+        self.game.continued = continued;
+        self.slides.clear();
+        self.merged.clear();
+        self.spawned = None;
+        true
     }
 
     fn try_move(&mut self, direction: Direction) -> bool {
@@ -66,6 +88,37 @@ fn pack_cell((r, c): Cell) -> u32 {
     r as u32 | (c as u32) << 4
 }
 
+/// A saved board being loaded cell by cell, checked before it is applied.
+struct Staging {
+    cells: [u8; SIZE * SIZE],
+    /// One bit per cell that has been loaded.
+    filled: u16,
+    /// A cell was out of range, so the whole load is rejected.
+    bad: bool,
+}
+
+impl Staging {
+    const fn new() -> Self {
+        Staging {
+            cells: [0; SIZE * SIZE],
+            filled: 0,
+            bad: false,
+        }
+    }
+
+    fn set(&mut self, index: u32, rank: u32) -> bool {
+        if index as usize >= SIZE * SIZE || rank > MAX_RANK as u32 {
+            self.bad = true;
+            return false;
+        }
+        self.cells[index as usize] = rank as u8;
+        self.filled |= 1 << index;
+        true
+    }
+}
+
+static STAGING: Mutex<Staging> = Mutex::new(Staging::new());
+
 static SESSION: Mutex<Option<Session>> = Mutex::new(None);
 
 /// Runs `action` on the session, or returns the default before `stardust_init`.
@@ -107,6 +160,30 @@ pub extern "C" fn stardust_continue() {
     });
 }
 
+/// Starts loading a saved game. Follow with `stardust_restore_cell` for each of
+/// the 16 cells (index is row * 4 + column), then `stardust_restore_commit`.
+#[unsafe(no_mangle)]
+pub extern "C" fn stardust_restore_begin() {
+    *STAGING.lock().unwrap() = Staging::new();
+}
+
+/// Stages one cell. Returns 0 if the index or rank is out of range.
+#[unsafe(no_mangle)]
+pub extern "C" fn stardust_restore_cell(index: u32, rank: u32) -> u32 {
+    STAGING.lock().unwrap().set(index, rank) as u32
+}
+
+/// Applies the staged game if it is valid and returns 1. Otherwise returns 0
+/// and the running game is untouched. `won` and `continued` are 0 or 1.
+#[unsafe(no_mangle)]
+pub extern "C" fn stardust_restore_commit(score: u32, won: u32, continued: u32) -> u32 {
+    let staged = std::mem::replace(&mut *STAGING.lock().unwrap(), Staging::new());
+    if won > 1 || continued > 1 {
+        return 0;
+    }
+    with_session(|session| session.restore(&staged, score, won == 1, continued == 1) as u32)
+}
+
 /// The rank at a cell, or 0 if it's empty or off the board.
 #[unsafe(no_mangle)]
 pub extern "C" fn stardust_cell(r: u32, c: u32) -> u32 {
@@ -128,6 +205,18 @@ pub extern "C" fn stardust_score() -> u32 {
 #[unsafe(no_mangle)]
 pub extern "C" fn stardust_best() -> u32 {
     with_session(|session| session.game.best)
+}
+
+/// Whether the top tile has been made, even if the message was dismissed.
+#[unsafe(no_mangle)]
+pub extern "C" fn stardust_won() -> u32 {
+    with_session(|session| session.game.won as u32)
+}
+
+/// Whether the player dismissed the win message and kept playing.
+#[unsafe(no_mangle)]
+pub extern "C" fn stardust_continued() -> u32 {
+    with_session(|session| session.game.continued as u32)
 }
 
 #[unsafe(no_mangle)]
@@ -264,6 +353,115 @@ mod tests {
         let mut session = session(full);
         assert!(session.game.over());
         assert!(!session.try_move(Direction::Left));
+    }
+
+    fn staged(cells: [u32; 16]) -> Staging {
+        let mut staging = Staging::new();
+        for (i, rank) in cells.into_iter().enumerate() {
+            staging.set(i as u32, rank);
+        }
+        staging
+    }
+
+    fn valid_cells() -> [u32; 16] {
+        let mut cells = [0; 16];
+        cells[0] = 3;
+        cells[5] = 11;
+        cells[15] = 1;
+        cells
+    }
+
+    #[test]
+    fn restore_applies_valid_state() {
+        let mut session = Session::new(1, 10);
+        assert!(session.restore(&staged(valid_cells()), 40, true, true));
+        assert_eq!(session.game.board[0][0], 3);
+        assert_eq!(session.game.board[1][1], 11);
+        assert_eq!(session.game.board[3][3], 1);
+        assert_eq!(session.game.score, 40);
+        assert_eq!(session.game.best, 40);
+        assert!(session.game.won && session.game.continued);
+        assert!(!session.game.showing_win());
+    }
+
+    #[test]
+    fn restore_keeps_a_higher_best() {
+        let mut session = Session::new(1, 500);
+        assert!(session.restore(&staged(valid_cells()), 40, false, false));
+        assert_eq!(session.game.best, 500);
+    }
+
+    #[test]
+    fn restored_win_and_finished_game_show_their_messages() {
+        let mut session = Session::new(1, 0);
+        assert!(session.restore(&staged(valid_cells()), 8, true, false));
+        assert!(session.game.showing_win());
+        let full = [1, 2, 1, 2, 2, 1, 2, 1, 1, 2, 1, 2, 2, 1, 2, 1];
+        assert!(session.restore(&staged(full), 8, false, false));
+        assert!(session.game.over());
+        assert!(!session.try_move(Direction::Left));
+    }
+
+    #[test]
+    fn restore_rejects_invalid_state_and_leaves_the_game_alone() {
+        let mut session = Session::new(1, 7);
+        session.game.score = 12;
+        let board = session.game.board;
+
+        let mut bad_rank = valid_cells();
+        bad_rank[2] = 12;
+        let mut rank_99 = Staging::new();
+        assert!(!rank_99.set(0, 99));
+        let mut bad_index = staged(valid_cells());
+        assert!(!bad_index.set(16, 1));
+        let mut partial = Staging::new();
+        for i in 0..15 {
+            partial.set(i, 1);
+        }
+
+        let rejected = [
+            staged(bad_rank),
+            rank_99,
+            bad_index,
+            partial,
+            staged([0; 16]),
+        ];
+        for saved in &rejected {
+            assert!(!session.restore(saved, 5, false, false));
+        }
+        // Continuing without having won is impossible.
+        assert!(!session.restore(&staged(valid_cells()), 5, false, true));
+
+        assert_eq!(session.game.board, board);
+        assert_eq!(session.game.score, 12);
+        assert_eq!(session.game.best, 7);
+        assert!(!session.game.won && !session.game.continued);
+    }
+
+    #[test]
+    fn restore_exports_validate_and_reset_between_loads() {
+        stardust_init(1, 0);
+        stardust_restore_begin();
+        assert_eq!(stardust_restore_cell(0, 99), 0);
+        for i in 1..16 {
+            stardust_restore_cell(i, 1);
+        }
+        assert_eq!(stardust_restore_commit(4, 0, 0), 0);
+
+        stardust_restore_begin();
+        for i in 0..16 {
+            assert_eq!(stardust_restore_cell(i, (i % 3) + 1), 1);
+        }
+        assert_eq!(stardust_restore_commit(4, 2, 0), 0);
+        assert_eq!(stardust_restore_commit(4, 0, 0), 0); // staging was consumed
+        stardust_restore_begin();
+        for i in 0..16 {
+            stardust_restore_cell(i, (i % 3) + 1);
+        }
+        assert_eq!(stardust_restore_commit(4, 0, 0), 1);
+        assert_eq!(stardust_score(), 4);
+        assert_eq!(stardust_best(), 4);
+        assert_eq!(stardust_cell(0, 1), 2);
     }
 
     #[test]

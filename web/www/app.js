@@ -5,6 +5,8 @@ const SIZE = 4;
 const SLIDE_MS = 110; // Keep in step with --slide-ms in style.css.
 const SWIPE_MIN_PX = 24;
 const BEST_KEY = "stardust-best";
+const GAME_KEY = "stardust-game";
+const GAME_VERSION = 1;
 const DIRECTIONS = { ArrowUp: 0, ArrowDown: 1, ArrowLeft: 2, ArrowRight: 3 };
 
 const byId = (id) => document.getElementById(id);
@@ -34,6 +36,46 @@ function saveBest(best) {
     localStorage.setItem(BEST_KEY, String(best));
   } catch {
     // A lost best score should never interrupt the game.
+  }
+}
+
+function saveGame() {
+  try {
+    const cells = [];
+    for (let r = 0; r < SIZE; r += 1) {
+      for (let c = 0; c < SIZE; c += 1) cells.push(game.stardust_cell(r, c));
+    }
+    localStorage.setItem(
+      GAME_KEY,
+      JSON.stringify({
+        v: GAME_VERSION,
+        board: cells,
+        score: game.stardust_score(),
+        won: game.stardust_won() === 1,
+        continued: game.stardust_continued() === 1,
+      }),
+    );
+  } catch {
+    // A game that isn't saved should never interrupt play.
+  }
+}
+
+// Restores the saved game if it is valid. Returns whether it did. Ranges of
+// the board cells are checked in Rust; this only checks the shape and types.
+function restoreGame() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(GAME_KEY));
+    if (!saved || saved.v !== GAME_VERSION) return false;
+    const { board: cells, score, won, continued } = saved;
+    if (!Array.isArray(cells) || cells.length !== SIZE * SIZE) return false;
+    if (!cells.every((rank) => Number.isInteger(rank) && rank >= 0)) return false;
+    if (!Number.isInteger(score) || score < 0 || score > 0xffffffff) return false;
+    if (typeof won !== "boolean" || typeof continued !== "boolean") return false;
+    game.stardust_restore_begin();
+    cells.forEach((rank, index) => game.stardust_restore_cell(index, rank));
+    return game.stardust_restore_commit(score, won ? 1 : 0, continued ? 1 : 0) === 1;
+  } catch {
+    return false;
   }
 }
 
@@ -153,6 +195,7 @@ function move(direction) {
   settle();
   const bestBefore = game.stardust_best();
   if (!game.stardust_try_move(direction)) return;
+  saveGame();
   if (game.stardust_best() !== bestBefore) saveBest(game.stardust_best());
 
   const resting = new Map(
@@ -184,11 +227,13 @@ function move(direction) {
 function newGame() {
   pendingEffects = null;
   game.stardust_new_game();
+  saveGame();
   settle();
 }
 
 function continuePlaying() {
   game.stardust_continue();
+  saveGame();
   settle();
 }
 
@@ -260,6 +305,7 @@ async function start() {
   const [seed] = crypto.getRandomValues(new Uint32Array(1));
   game.stardust_init(seed, loadBest());
   tiers = readTiers(game.memory);
+  if (!restoreGame()) saveGame();
   buildPage();
   settle();
 }
