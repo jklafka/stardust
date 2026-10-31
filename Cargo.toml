@@ -1,12 +1,10 @@
-[package]
-name = "stardust"
-version = "0.1.0"
-edition = "2024"
-description = "Merge cosmic matter on a 4x4 grid, from Dust up to a Universe."
-
-[dependencies]
-libc = "0.2"
+[workspace]
+resolver = "3"
+members = ["core", "terminal", "web"]
 
 [profile.release]
 lto = true
 strip = true
+
+[profile.release.package.stardust-web]
+opt-level = "s"

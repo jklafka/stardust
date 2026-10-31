@@ -159,6 +159,13 @@ mod tests {
     }
 
     #[test]
+    fn every_tile_glyph_is_double_width() {
+        for tier in &stardust_core::TIERS {
+            assert_eq!(char_width(tier.glyph), 2, "{}", tier.name);
+        }
+    }
+
+    #[test]
     fn overwriting_half_a_wide_glyph_clears_the_other_half() {
         let mut screen = Screen::new(6, 1);
         screen.put(1, 0, "✨", plain());

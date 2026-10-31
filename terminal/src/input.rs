@@ -1,6 +1,6 @@
 //! Turns raw terminal bytes into game events.
 
-use crate::game::Direction;
+use stardust_core::Direction;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Event {
