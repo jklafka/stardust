@@ -37,6 +37,10 @@ fn key(byte: u8) -> Option<Event> {
         b'q' | b'Q' | 0x03 => Some(Event::Quit),
         b'n' | b'N' => Some(Event::New),
         b'c' | b'C' => Some(Event::Continue),
+        b'w' | b'W' | b'i' | b'I' => Some(Event::Move(Direction::Up)),
+        b's' | b'S' | b'k' | b'K' => Some(Event::Move(Direction::Down)),
+        b'a' | b'A' | b'j' | b'J' => Some(Event::Move(Direction::Left)),
+        b'd' | b'D' | b'l' | b'L' => Some(Event::Move(Direction::Right)),
         _ => None,
     }
 }
@@ -155,6 +159,33 @@ mod tests {
     #[test]
     fn keys() {
         assert_eq!(events(b"qnc\x03x"), [Quit, New, Continue, Quit]);
+    }
+
+    #[test]
+    fn letter_moves_in_both_cases() {
+        assert_eq!(events(b"wW"), [Move(Up), Move(Up)]);
+        assert_eq!(events(b"iI"), [Move(Up), Move(Up)]);
+        assert_eq!(events(b"sS"), [Move(Down), Move(Down)]);
+        assert_eq!(events(b"kK"), [Move(Down), Move(Down)]);
+        assert_eq!(events(b"aA"), [Move(Left), Move(Left)]);
+        assert_eq!(events(b"jJ"), [Move(Left), Move(Left)]);
+        assert_eq!(events(b"dD"), [Move(Right), Move(Right)]);
+        assert_eq!(events(b"lL"), [Move(Right), Move(Right)]);
+    }
+
+    #[test]
+    fn letters_mix_with_arrows_and_keys() {
+        assert_eq!(
+            events(b"w\x1b[Bn\x1bOCc"),
+            [Move(Up), Move(Down), New, Move(Right), Continue]
+        );
+    }
+
+    #[test]
+    fn stray_escape_before_letter_is_not_a_move() {
+        // ESC followed by a letter is a stray ESC; the letter is still read as a key.
+        assert_eq!(events(b"\x1bw"), [Move(Up)]);
+        assert_eq!(events(b"\x1bq"), [Quit]);
     }
 
     #[test]
