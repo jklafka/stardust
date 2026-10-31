@@ -40,6 +40,7 @@ mod tests {
     fn parses_ids_and_falls_back_to_space() {
         assert_eq!(parse("plants"), 1);
         assert_eq!(parse("plants\n"), 1);
+        assert_eq!(parse("fantasy"), 2);
         assert_eq!(parse("space"), 0);
         assert_eq!(parse(""), 0);
         assert_eq!(parse("Plants"), 0);

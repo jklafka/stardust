@@ -125,12 +125,45 @@ function readThemes(memory) {
     win: text(game.stardust_theme_win_ptr(theme), game.stardust_theme_win_len(theme)),
     tiers: Array.from({ length: game.stardust_tier_count() }, (_, tier) => ({
       glyph: String.fromCodePoint(game.stardust_tier_glyph(theme, tier)),
+      sprite: readSprite(theme, tier),
       name: text(
         game.stardust_tier_name_ptr(theme, tier),
         game.stardust_tier_name_len(theme, tier),
       ),
     })),
   }));
+}
+
+// A tier's sprite as image data, or null if it's drawn with its glyph.
+function readSprite(theme, tier) {
+  if (!game.stardust_tier_has_sprite(theme, tier)) return null;
+  const width = game.stardust_sprite_width();
+  const image = new ImageData(width, game.stardust_sprite_height());
+  image.data.forEach((_, byte) => {
+    const index = byte >> 2;
+    const pixel = game.stardust_tier_sprite_pixel(theme, tier, index % width, Math.floor(index / width));
+    image.data[byte] = [(pixel >> 16) & 255, (pixel >> 8) & 255, pixel & 255, pixel ? 255 : 0][byte & 3];
+  });
+  return image;
+}
+
+// A canvas rather than an image: tiles are redrawn after every move, and a canvas
+// shows its pixels at once where a new image can flicker while it decodes.
+function createSprite(image) {
+  const canvas = document.createElement("canvas");
+  canvas.className = "sprite";
+  canvas.width = image.width;
+  canvas.height = image.height;
+  canvas.setAttribute("aria-hidden", "true");
+  canvas.getContext("2d")?.putImageData(image, 0, 0);
+  return canvas;
+}
+
+function createPart(className, text) {
+  const part = document.createElement("span");
+  part.className = className;
+  part.textContent = text;
+  return part;
 }
 
 function createTile(rank, r, c, effect) {
@@ -141,16 +174,12 @@ function createTile(rank, r, c, effect) {
   tile.style.setProperty("--ink", `var(--ink-${rank})`);
   placeTile(tile, r, c);
 
-  for (const [className, text] of [
-    ["rank", rank],
-    ["glyph", tier.glyph],
-    ["name", tier.name],
-  ]) {
-    const part = document.createElement("span");
-    part.className = className;
-    part.textContent = text;
-    tile.append(part);
-  }
+  tile.classList.toggle("has-sprite", tier.sprite !== null);
+  tile.append(
+    createPart("rank", rank),
+    tier.sprite ? createSprite(tier.sprite) : createPart("glyph", tier.glyph),
+    createPart("name", tier.name),
+  );
   return tile;
 }
 
@@ -231,7 +260,8 @@ function renderTierList() {
       const number = document.createElement("span");
       number.className = "number";
       number.textContent = index + 1;
-      item.append(number, `${tier.glyph} ${tier.name}`);
+      if (tier.sprite) item.append(number, createSprite(tier.sprite), tier.name);
+      else item.append(number, `${tier.glyph} ${tier.name}`);
       return item;
     }),
   );

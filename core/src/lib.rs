@@ -41,7 +41,7 @@ impl Theme {
 }
 
 /// Every theme. The first is the default.
-pub const THEMES: [Theme; 2] = [
+pub const THEMES: [Theme; 3] = [
     Theme {
         id: "space",
         name: "Space",
@@ -76,6 +76,25 @@ pub const THEMES: [Theme; 2] = [
             tier("Palm", '🌴', 223, 16),
             tier("Pine", '🌲', 189, 16),
             tier("Oak", '🌳', 220, 16),
+        ],
+    },
+    // The web version draws these tiers as sprites. See web/src/sprites.rs.
+    Theme {
+        id: "fantasy",
+        name: "Fantasy",
+        win_message: "You trained a Wizard!",
+        tiers: [
+            tier("Bard", '🎻', 187, 16),
+            tier("Rogue", '🥷', 109, 16),
+            tier("Fighter", '🤺', 60, 231),
+            tier("Ranger", '🏹', 180, 16),
+            tier("Monk", '🥋', 30, 231),
+            tier("Barbarian", '🪓', 24, 231),
+            tier("Druid", '🌿', 222, 16),
+            tier("Cleric", '📿', 132, 231),
+            tier("Warlock", '💀', 139, 16),
+            tier("Paladin", '🏰', 88, 231),
+            tier("Wizard", '🧙', 229, 16),
         ],
     },
 ];
@@ -358,6 +377,7 @@ mod tests {
     fn every_theme_has_eleven_unique_tiers_that_fit() {
         assert_eq!(THEMES[0].id, "space");
         assert_eq!(THEMES[1].id, "plants");
+        assert_eq!(THEMES[2].id, "fantasy");
         for theme in &THEMES {
             assert_eq!(theme.tiers.len(), MAX_RANK as usize);
             let names: std::collections::HashSet<_> = theme.tiers.iter().map(|t| t.name).collect();
@@ -377,7 +397,9 @@ mod tests {
         assert_eq!(ids.len(), THEMES.len());
         assert_eq!(THEMES[0].win_message, "You made a Universe!");
         assert_eq!(THEMES[1].win_message, "You grew an Oak!");
+        assert_eq!(THEMES[2].win_message, "You trained a Wizard!");
         assert_eq!(theme_index("plants"), Some(1));
+        assert_eq!(theme_index("fantasy"), Some(2));
         assert_eq!(theme_index("nope"), None);
     }
 
@@ -415,6 +437,8 @@ mod tests {
         let board = game.board;
         assert!(game.cycle_theme());
         assert_eq!(game.theme().id, "plants");
+        assert!(game.cycle_theme());
+        assert_eq!(game.theme().id, "fantasy");
         assert!(game.cycle_theme());
         assert_eq!(game.theme().id, "space");
         assert_eq!((game.board, game.score), (board, 77));

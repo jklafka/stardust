@@ -4,8 +4,11 @@
 //! These are plain exported functions rather than wasm-bindgen bindings, so
 //! the page can load the module with no generated code or extra dependency.
 
+mod sprites;
+
 use std::sync::Mutex;
 
+use sprites::Sprite;
 use stardust_core::{Cell, Direction, Game, MAX_RANK, SIZE, Slide, THEMES};
 
 struct Session {
@@ -366,6 +369,38 @@ pub extern "C" fn stardust_tier_name_len(theme: u32, tier_index: u32) -> u32 {
     tier(theme, tier_index).map_or(0, |t| t.name.len() as u32)
 }
 
+fn sprite(theme: u32, tier_index: u32) -> Option<&'static Sprite> {
+    if THEMES.get(theme as usize)?.id != "fantasy" {
+        return None;
+    }
+    sprites::FANTASY.get(tier_index as usize)
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn stardust_sprite_width() -> u32 {
+    sprites::WIDTH as u32
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn stardust_sprite_height() -> u32 {
+    sprites::HEIGHT as u32
+}
+
+/// Whether a tier is drawn as a sprite rather than with its glyph.
+#[unsafe(no_mangle)]
+pub extern "C" fn stardust_tier_has_sprite(theme: u32, tier_index: u32) -> u32 {
+    sprite(theme, tier_index).is_some() as u32
+}
+
+/// A sprite pixel. Bits, lowest first: blue, green, red (8 each), then 1 if the
+/// pixel is opaque. Transparent and out-of-range pixels are 0.
+#[unsafe(no_mangle)]
+pub extern "C" fn stardust_tier_sprite_pixel(theme: u32, tier_index: u32, x: u32, y: u32) -> u32 {
+    sprite(theme, tier_index)
+        .and_then(|sprite| sprite.pixel(x as usize, y as usize))
+        .map_or(0, |rgb| rgb | 1 << 24)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -565,19 +600,19 @@ mod tests {
     fn theme_exports() {
         let _turn = GLOBAL.lock().unwrap_or_else(|e| e.into_inner());
         stardust_init(1, 0);
-        assert_eq!(stardust_theme_count(), 2);
+        assert_eq!(stardust_theme_count(), 3);
         assert_eq!(stardust_theme(), 0);
         assert_eq!(stardust_can_switch_theme(), 1);
-        assert_eq!(stardust_set_theme(2), 0);
+        assert_eq!(stardust_set_theme(3), 0);
         assert_eq!(stardust_set_theme(1), 1);
         assert_eq!(stardust_theme(), 1);
         assert_eq!(stardust_theme_id_len(1), 6);
         assert_eq!(stardust_theme_name_len(0), 5);
         assert_eq!(stardust_theme_win_len(1), "You grew an Oak!".len() as u32);
-        assert!(stardust_theme_id_ptr(2).is_null());
-        assert!(stardust_theme_name_ptr(2).is_null());
-        assert!(stardust_theme_win_ptr(2).is_null());
-        assert_eq!(stardust_theme_win_len(2), 0);
+        assert!(stardust_theme_id_ptr(3).is_null());
+        assert!(stardust_theme_name_ptr(3).is_null());
+        assert!(stardust_theme_win_ptr(3).is_null());
+        assert_eq!(stardust_theme_win_len(3), 0);
 
         // Mid-game switching is refused, and the board is untouched.
         with_session(|session| {
@@ -605,9 +640,45 @@ mod tests {
         assert_eq!(stardust_tier_glyph(1, 10), '🌳' as u32);
         assert_eq!(stardust_tier_name_len(1, 5), 9);
         assert_eq!(stardust_tier_glyph(0, 11), 0);
-        assert_eq!(stardust_tier_glyph(2, 0), 0);
+        assert_eq!(stardust_tier_glyph(2, 10), '🧙' as u32);
+        assert_eq!(stardust_tier_glyph(3, 0), 0);
         assert_eq!(stardust_tier_name_len(0, 11), 0);
         assert!(stardust_tier_name_ptr(0, 11).is_null());
-        assert!(stardust_tier_name_ptr(2, 0).is_null());
+        assert!(stardust_tier_name_ptr(3, 0).is_null());
+    }
+
+    #[test]
+    fn only_the_fantasy_theme_has_sprites() {
+        for theme in 0..=THEMES.len() as u32 {
+            let expected = THEMES
+                .get(theme as usize)
+                .is_some_and(|t| t.id == "fantasy");
+            for tier in 0..MAX_RANK as u32 {
+                assert_eq!(stardust_tier_has_sprite(theme, tier), expected as u32);
+            }
+        }
+        assert_eq!(stardust_tier_has_sprite(2, MAX_RANK as u32), 0);
+    }
+
+    #[test]
+    fn sprites_are_in_tier_order() {
+        let fantasy = &THEMES[stardust_core::theme_index("fantasy").unwrap()];
+        for (tier, sprite) in fantasy.tiers.iter().zip(&sprites::FANTASY) {
+            assert_eq!(tier.name, sprite.name);
+        }
+        assert_eq!(fantasy.tiers.len(), sprites::FANTASY.len());
+    }
+
+    #[test]
+    fn sprite_pixels_pack_into_their_fields() {
+        // Row 0 of the Bard: transparent, then its outline color from column 9.
+        assert_eq!(stardust_tier_sprite_pixel(2, 0, 0, 0), 0);
+        assert_eq!(stardust_tier_sprite_pixel(2, 0, 9, 0), 0x011c_1424);
+        assert_eq!(stardust_tier_sprite_pixel(2, 0, 16, 0), 0);
+        assert_eq!(stardust_tier_sprite_pixel(0, 0, 9, 0), 0);
+        assert_eq!(
+            (stardust_sprite_width(), stardust_sprite_height()),
+            (16, 24)
+        );
     }
 }
