@@ -597,19 +597,20 @@ mod tests {
     fn theme_exports() {
         let _turn = GLOBAL.lock().unwrap_or_else(|e| e.into_inner());
         stardust_init(1, 0);
-        assert_eq!(stardust_theme_count(), 3);
+        let past = THEMES.len() as u32; // one past the last theme
+        assert_eq!(stardust_theme_count(), past);
         assert_eq!(stardust_theme(), 0);
         assert_eq!(stardust_can_switch_theme(), 1);
-        assert_eq!(stardust_set_theme(3), 0);
+        assert_eq!(stardust_set_theme(past), 0);
         assert_eq!(stardust_set_theme(1), 1);
         assert_eq!(stardust_theme(), 1);
         assert_eq!(stardust_theme_id_len(1), 6);
         assert_eq!(stardust_theme_name_len(0), 5);
         assert_eq!(stardust_theme_win_len(1), "You grew an Oak!".len() as u32);
-        assert!(stardust_theme_id_ptr(3).is_null());
-        assert!(stardust_theme_name_ptr(3).is_null());
-        assert!(stardust_theme_win_ptr(3).is_null());
-        assert_eq!(stardust_theme_win_len(3), 0);
+        assert!(stardust_theme_id_ptr(past).is_null());
+        assert!(stardust_theme_name_ptr(past).is_null());
+        assert!(stardust_theme_win_ptr(past).is_null());
+        assert_eq!(stardust_theme_win_len(past), 0);
 
         // Mid-game switching is refused, and the board is untouched.
         with_session(|session| {
@@ -631,6 +632,7 @@ mod tests {
 
     #[test]
     fn tier_exports_describe_every_tier() {
+        let past = THEMES.len() as u32; // one past the last theme
         assert_eq!(stardust_tier_count(), 11);
         assert_eq!(stardust_tier_name_len(0, 0), 4);
         assert_eq!(stardust_tier_glyph(0, 10), '🌌' as u32);
@@ -638,10 +640,11 @@ mod tests {
         assert_eq!(stardust_tier_name_len(1, 5), 9);
         assert_eq!(stardust_tier_glyph(0, 11), 0);
         assert_eq!(stardust_tier_glyph(2, 10), '🧙' as u32);
-        assert_eq!(stardust_tier_glyph(3, 0), 0);
+        assert_eq!(stardust_tier_glyph(3, 10), '🎼' as u32);
+        assert_eq!(stardust_tier_glyph(past, 0), 0);
         assert_eq!(stardust_tier_name_len(0, 11), 0);
         assert!(stardust_tier_name_ptr(0, 11).is_null());
-        assert!(stardust_tier_name_ptr(3, 0).is_null());
+        assert!(stardust_tier_name_ptr(past, 0).is_null());
     }
 
     #[test]
