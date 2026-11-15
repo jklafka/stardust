@@ -36,9 +36,9 @@ Then open <http://localhost:8000>. After building, `web/www` is a complete stati
 
 ## How to play
 
-Every move slides all the tiles as far as they can go in one direction. When two matching tiles collide, they merge into the next tile up, and a new Atom or Cell tile (Seed or Sprout in the Plants theme, Bard or Rogue in the Fantasy theme, 128th or 64th in the Notes theme) then appears in an empty cell.
+Every move slides all the tiles as far as they can go in one direction. When two matching tiles collide, they merge into the next tile up, and a new Atom or Cell tile (Seed or Sprout in the Plants theme, Bard or Rogue in the Fantasy theme, 128th or 64th in the Notes theme, Graphite or Talc in the Minerals theme) then appears in an empty cell.
 
-Make a Universe (an Oak in the Plants theme, a Wizard in the Fantasy theme, a Maxima in the Notes theme) to win, then keep playing for a higher score if you like. The game ends when the grid is full and no neighboring tiles can merge.
+Make a Universe (an Oak in the Plants theme, a Wizard in the Fantasy theme, a Maxima in the Notes theme, a Diamond in the Minerals theme) to win, then keep playing for a higher score if you like. The game ends when the grid is full and no neighboring tiles can merge.
 
 | Input | Action |
 |---|---|
@@ -55,7 +55,7 @@ In a terminal, swipes only work if your terminal app sends touch as mouse input,
 
 Merging two tiles of one rank makes one tile of the next rank, and scores the points shown for the new tile. The top tile can't merge, so two of them can't combine.
 
-The game has four themes, Scale, Plants, Fantasy and Notes, which change only the names and pictures of the tiles. Press `t` to switch, when the game allows it. The points are the same in every theme.
+The game has five themes, Scale, Plants, Fantasy, Notes and Minerals, which change only the names and pictures of the tiles. Press `t` to switch, when the game allows it. The points are the same in every theme.
 
 #### Scale
 
@@ -126,6 +126,24 @@ Musical note values, where merging is musically true: two of each note last as l
 | 9 | 🎹 Breve | 256 |
 | 10 | 🔔 Longa | 512 |
 | 11 | 🎼 Maxima | 1024 |
+
+#### Minerals
+
+The middle tiles are the Mohs hardness scale, from Talc to Corundum, between the softest and hardest forms of carbon. Like Fantasy, the web version draws each mineral as a pixel-art sprite, and the terminal uses the emoji shown here.
+
+| Rank | Tile | Points |
+|---:|---|---:|
+| 1 | 🪨 Graphite | Starting tile |
+| 2 | 🧼 Talc | 2 |
+| 3 | 🪟 Gypsum | 4 |
+| 4 | 🟧 Calcite | 8 |
+| 5 | 🟪 Fluorite | 16 |
+| 6 | 🦷 Apatite | 32 |
+| 7 | 🧱 Feldspar | 64 |
+| 8 | 🔮 Quartz | 128 |
+| 9 | 🟡 Topaz | 256 |
+| 10 | 🔴 Corundum | 512 |
+| 11 | 💎 Diamond | 1024 |
 
 New tiles are the first tile 90% of the time and the second 10% of the time (Atom or Cell in Scale).
 
