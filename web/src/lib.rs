@@ -642,6 +642,7 @@ mod tests {
         assert_eq!(stardust_tier_glyph(2, 10), '🧙' as u32);
         assert_eq!(stardust_tier_glyph(3, 10), '🎼' as u32);
         assert_eq!(stardust_tier_glyph(4, 10), '💎' as u32);
+        assert_eq!(stardust_tier_glyph(5, 10), '🟢' as u32);
         assert_eq!(stardust_tier_glyph(past, 0), 0);
         assert_eq!(stardust_tier_name_len(0, 11), 0);
         assert!(stardust_tier_name_ptr(0, 11).is_null());

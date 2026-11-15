@@ -502,4 +502,13 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn tiles_never_look_like_the_board() {
+        for theme in &stardust_core::THEMES {
+            for tier in &theme.tiers {
+                assert!(![BOARD_BG, EMPTY_BG].contains(&tier.bg), "{}", tier.name);
+            }
+        }
+    }
 }
