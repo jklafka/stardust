@@ -22,7 +22,9 @@ const tilesLayer = byId("tiles");
 const overlay = byId("overlay");
 const keepGoing = byId("keep-going");
 const playAgain = byId("play-again");
-const themeSelect = byId("theme-select");
+const themeButton = byId("theme-button");
+const themeDialog = byId("theme-dialog");
+const themeWheel = byId("theme-wheel");
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
 
 let game;
@@ -267,13 +269,104 @@ function renderTierList() {
   );
 }
 
-// Shows which theme is current and whether it can be changed now.
+// A theme's picture: its top tile, as a sprite or a glyph.
+function themePicture(theme) {
+  const top = theme.tiers[theme.tiers.length - 1];
+  return top.sprite ? createSprite(top.sprite) : createPart("glyph", top.glyph);
+}
+
+// Shows which theme is current and whether it can be changed now. While it
+// can't, the button is disabled and the note says when it can.
 function renderThemeControl() {
   const allowed = game.stardust_can_switch_theme() === 1;
-  document.documentElement.dataset.theme = themes[currentTheme].id;
-  themeSelect.value = String(currentTheme);
-  themeSelect.disabled = !allowed;
+  const theme = themes[currentTheme];
+  document.documentElement.dataset.theme = theme.id;
+  if (themeButton.dataset.theme !== theme.id) {
+    themeButton.dataset.theme = theme.id;
+    byId("theme-button-picture").replaceChildren(themePicture(theme));
+    byId("theme-button-name").textContent = theme.name;
+  }
+  themeButton.disabled = !allowed;
+  if (allowed) themeButton.removeAttribute("aria-describedby");
+  else themeButton.setAttribute("aria-describedby", "theme-note");
   byId("theme-note").hidden = allowed;
+}
+
+// Builds the wheel: one button per theme, spaced evenly around a circle and
+// starting at the top. Works for any number of themes.
+function buildThemeWheel() {
+  const count = themes.length;
+  // Items shrink as more themes share the circle, so neighbors never touch.
+  // Sizes are percentages of the wheel; see .theme-wheel in style.css.
+  const item = Math.min(28, 64 * Math.sin(Math.PI / Math.max(count, 2)));
+  themeWheel.style.setProperty("--item", item.toFixed(2));
+  themeWheel.append(
+    ...themes.map((theme, index) => {
+      const angle = (2 * Math.PI * index) / count - Math.PI / 2;
+      const choice = document.createElement("button");
+      choice.type = "button";
+      choice.className = "theme-choice";
+      choice.dataset.index = index;
+      choice.style.setProperty("--x", Math.cos(angle).toFixed(4));
+      choice.style.setProperty("--y", Math.sin(angle).toFixed(4));
+      const picture = document.createElement("span");
+      picture.className = "theme-picture";
+      picture.setAttribute("aria-hidden", "true");
+      picture.append(themePicture(theme));
+      const first = theme.tiers[0].name;
+      const last = theme.tiers[theme.tiers.length - 1].name;
+      choice.append(
+        picture,
+        createPart("theme-choice-name", theme.name),
+        createPart("visually-hidden", `, ${first} to ${last}`),
+      );
+      choice.addEventListener("click", () => pickTheme(index));
+      choice.addEventListener("focus", () => highlightTheme(index));
+      choice.addEventListener("pointerenter", () => highlightTheme(index));
+      return choice;
+    }),
+  );
+}
+
+// Moves the highlight, which is also the one wheel item reachable with Tab.
+function highlightTheme(index, focus = false) {
+  const theme = themes[index];
+  themeWheel.querySelectorAll(".theme-choice").forEach((choice, i) => {
+    choice.tabIndex = i === index ? 0 : -1;
+    choice.classList.toggle("highlighted", i === index);
+    if (i === index && focus) choice.focus();
+  });
+  byId("theme-hub-name").textContent = theme.name;
+  byId("theme-hub-range").textContent =
+    `${theme.tiers[0].name} → ${theme.tiers[theme.tiers.length - 1].name}`;
+  byId("theme-hub-win").textContent = theme.win;
+}
+
+function openThemeWheel() {
+  if (game.stardust_can_switch_theme() !== 1 || themeDialog.open) return;
+  settle(); // Nothing should be moving behind the dialog.
+  themeWheel.querySelectorAll(".theme-choice").forEach((choice, i) => {
+    if (i === currentTheme) choice.setAttribute("aria-current", "true");
+    else choice.removeAttribute("aria-current");
+  });
+  themeDialog.showModal();
+  highlightTheme(currentTheme, true);
+}
+
+function pickTheme(index) {
+  chooseTheme(index);
+  themeDialog.close();
+}
+
+// Arrow keys go around the wheel: Left and Up counter-clockwise, Right and
+// Down clockwise. Enter and Space press the focused button, and Esc closes.
+function onWheelKeyDown(event) {
+  const step = { ArrowLeft: -1, ArrowUp: -1, ArrowRight: 1, ArrowDown: 1 }[event.key];
+  if (!step) return;
+  event.preventDefault();
+  const highlighted = themeWheel.querySelector(".theme-choice.highlighted");
+  const index = highlighted ? Number(highlighted.dataset.index) : currentTheme;
+  highlightTheme((index + step + themes.length) % themes.length, true);
 }
 
 // Changes the theme if the game allows it. Redraws everything at once.
@@ -351,7 +444,7 @@ function continuePlaying() {
 
 function onKeyDown(event) {
   if (event.ctrlKey || event.metaKey || event.altKey) return;
-  if (event.target === themeSelect) return; // Its own keys pick a theme, not a move.
+  if (themeDialog.open) return; // The wheel has its own keys, and the game waits behind it.
   if (event.key in DIRECTIONS) {
     event.preventDefault();
     move(DIRECTIONS[event.key]);
@@ -394,16 +487,20 @@ function buildPage() {
   board.tabIndex = -1;
 
   renderTierList();
-  themeSelect.append(
-    ...themes.map((theme, index) => new Option(theme.name, String(index))),
-  );
-  themeSelect.addEventListener("change", () => {
-    chooseTheme(Number(themeSelect.value));
-    themeSelect.value = String(currentTheme);
-    // Hand the keyboard back to the game.
-    if (overlayKind) (overlayKind === "win" ? keepGoing : playAgain).focus();
-    else themeSelect.blur();
+  buildThemeWheel();
+  themeButton.addEventListener("click", openThemeWheel);
+  themeDialog.addEventListener("keydown", onWheelKeyDown);
+  byId("theme-close").addEventListener("click", () => themeDialog.close());
+  // A click on the backdrop lands on the dialog itself, outside its content box.
+  themeDialog.addEventListener("click", (event) => {
+    if (event.target !== themeDialog) return;
+    const box = themeDialog.getBoundingClientRect();
+    const inside = event.clientX >= box.left && event.clientX <= box.right &&
+      event.clientY >= box.top && event.clientY <= box.bottom;
+    if (!inside) themeDialog.close();
   });
+  // Hand the keyboard back to the button that opened the wheel.
+  themeDialog.addEventListener("close", () => themeButton.focus());
 
   byId("new-game").addEventListener("click", newGame);
   playAgain.addEventListener("click", newGame);

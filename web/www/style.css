@@ -382,29 +382,195 @@ button:focus-visible {
   text-transform: uppercase;
 }
 
-/* 16px text stops phones zooming in when the control is focused. */
-.theme-select {
+.theme-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   min-width: 130px;
-  min-height: 44px;
-  padding-inline: 10px;
+  padding-inline: 10px 14px;
   border: 1px solid var(--muted);
-  border-radius: 8px;
   background: var(--panel);
   color: var(--text);
-  font: inherit;
-  font-size: 16px;
-  cursor: pointer;
+  font-weight: 600;
 }
 
-.theme-select:focus-visible {
-  outline: 3px solid var(--text);
-  outline-offset: 2px;
-}
-
-.theme-select:disabled {
+.theme-button:disabled {
   border-color: transparent;
   color: var(--muted);
   cursor: default;
+  filter: none;
+}
+
+/* A theme's top tile, shown on the button and on the wheel. */
+.theme-picture {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  background: var(--empty);
+}
+
+.theme-picture .glyph {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.theme-button:disabled .theme-picture {
+  opacity: 0.7;
+}
+
+/* The wheel opens without moving: the dialog and its backdrop only fade in. */
+.theme-dialog {
+  width: min(420px, 100vw - 24px);
+  max-height: calc(100dvh - 24px);
+  padding: 16px;
+  border: 1px solid var(--empty);
+  border-radius: 12px;
+  background: var(--panel);
+  color: var(--text);
+  text-align: center;
+}
+
+.theme-dialog[open],
+.theme-dialog[open]::backdrop {
+  animation: fade-in 200ms ease-out;
+}
+
+.theme-dialog::backdrop {
+  background: #0b0d17cc;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+}
+
+.theme-dialog-title {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Themes sit at fixed points on a circle. app.js sets --x and --y (the
+   direction from the center) for each choice, and --item (a choice's size as
+   a percentage of the wheel), which shrinks as more themes share the circle. */
+.theme-wheel {
+  --radius: calc((50 - var(--item) / 2 - 1) * 1%);
+  position: relative;
+  container-type: inline-size;
+  aspect-ratio: 1;
+  width: min(100%, calc(100dvh - 140px));
+  min-width: min(100%, 240px);
+  margin-inline: auto;
+}
+
+.theme-wheel::before {
+  content: "";
+  position: absolute;
+  inset: calc(50% - var(--radius));
+  border: 2px solid var(--empty);
+  border-radius: 50%;
+}
+
+.theme-hub {
+  position: absolute;
+  inset: calc(50% - var(--radius) + var(--item) * 0.5% + 3%);
+  display: grid;
+  place-content: center;
+  gap: 2px;
+  font-size: clamp(11px, 3.4cqw, 14px);
+  text-wrap: balance;
+  line-height: 1.2;
+}
+
+.theme-hub strong {
+  color: var(--accent);
+  font-size: clamp(15px, 5.2cqw, 20px);
+}
+
+.theme-hub span {
+  color: var(--muted);
+}
+
+.theme-choice {
+  position: absolute;
+  left: calc(50% + var(--x) * var(--radius));
+  top: calc(50% + var(--y) * var(--radius));
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 2px;
+  width: calc(var(--item) * 1%);
+  aspect-ratio: 1;
+  min-height: 0;
+  padding: 0;
+  border: 2px solid var(--empty);
+  border-radius: 50%;
+  background: var(--space);
+  color: var(--text);
+  font-size: clamp(11px, 3.6cqw, 15px);
+  font-weight: 600;
+  line-height: 1.1;
+  transform: translate(-50%, -50%);
+  transition: background-color 200ms ease-in-out, border-color 200ms ease-in-out;
+}
+
+.theme-choice:hover {
+  filter: none;
+}
+
+.theme-choice .theme-picture {
+  width: auto;
+  height: auto;
+  background: none;
+}
+
+.theme-choice .glyph {
+  font-size: clamp(20px, 9cqw, 36px);
+}
+
+.theme-choice .sprite {
+  height: max(24px, 12cqw);
+  height: max(24px, round(down, 13cqw, 24px));
+}
+
+@media (min-resolution: 2dppx) {
+  .theme-choice .sprite {
+    height: max(24px, round(down, 13cqw, 12px));
+  }
+}
+
+.theme-choice.highlighted {
+  border-color: var(--muted);
+  background: var(--empty);
+}
+
+.theme-choice[aria-current="true"] {
+  border-color: var(--accent);
+}
+
+.theme-choice[aria-current="true"] .theme-choice-name {
+  color: var(--accent);
+}
+
+/* Says "current" in words too, so the mark doesn't rely on color alone. */
+.theme-choice[aria-current="true"]::after {
+  content: "Current" / "";
+  color: var(--accent);
+  font-size: 0.75em;
+  font-weight: 500;
+}
+
+.theme-close {
+  margin-top: 8px;
+  border: 1px solid var(--muted);
+  background: var(--panel);
+  color: var(--text);
+  font-weight: 600;
 }
 
 .theme-note {
@@ -560,8 +726,14 @@ kbd {
   }
 
   .tile.spawn,
-  .overlay {
+  .overlay,
+  .theme-dialog[open],
+  .theme-dialog[open]::backdrop {
     animation: none;
+  }
+
+  .theme-choice {
+    transition: none;
   }
 
   .board.game-over #tiles {
