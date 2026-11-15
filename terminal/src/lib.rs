@@ -1,4 +1,4 @@
-//! Stardust: merge cosmic matter on a 4x4 grid, from Dust up to a Universe.
+//! Stardust: merge tiles on a 4x4 grid, from an Atom up to a Universe.
 
 pub mod app;
 pub mod best;

@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Stardust is a game written in Rust: tiles slide on a 4x4 grid, and two matching tiles merge into the next of 11 tiers, from the lowest tier up to the top one (Dust to Universe, Seed to Oak in the Plants theme, or Bard to Wizard in the Fantasy theme). It has a terminal version for Unix, which uses `termios` through `libc`, and a web version that compiles the same rules to WebAssembly. The web version is live at https://stardust.jklafka.cloud.
+Stardust is a game written in Rust: tiles slide on a 4x4 grid, and two matching tiles merge into the next of 11 tiers, from the lowest tier up to the top one (Atom to Universe, Seed to Oak in the Plants theme, or Bard to Wizard in the Fantasy theme). It has a terminal version for Unix, which uses `termios` through `libc`, and a web version that compiles the same rules to WebAssembly. The web version is live at https://stardust.jklafka.cloud.
 
 ## Commands
 

@@ -4,7 +4,7 @@
 
 **[Play Stardust in your browser at stardust.jklafka.cloud](https://stardust.jklafka.cloud)**
 
-A game in the style of 2048, for your terminal or your browser. Slide tiles around a 4x4 grid and merge matching ones to build your way from a speck of Dust to a whole Universe.
+A game in the style of 2048, for your terminal or your browser. Slide tiles around a 4x4 grid and merge matching ones to build your way from a single Atom to a whole Universe.
 
 ## Getting started
 
@@ -36,7 +36,7 @@ Then open <http://localhost:8000>. After building, `web/www` is a complete stati
 
 ## How to play
 
-Every move slides all the tiles as far as they can go in one direction. When two matching tiles collide, they merge into the next tile up, and a new Dust or Rock tile (Seed or Sprout in the Plants theme, Bard or Rogue in the Fantasy theme) then appears in an empty cell.
+Every move slides all the tiles as far as they can go in one direction. When two matching tiles collide, they merge into the next tile up, and a new Atom or Cell tile (Seed or Sprout in the Plants theme, Bard or Rogue in the Fantasy theme) then appears in an empty cell.
 
 Make a Universe (an Oak in the Plants theme, a Wizard in the Fantasy theme) to win, then keep playing for a higher score if you like. The game ends when the grid is full and no neighboring tiles can merge.
 
@@ -55,21 +55,23 @@ In a terminal, swipes only work if your terminal app sends touch as mouse input,
 
 Merging two tiles of one rank makes one tile of the next rank, and scores the points shown for the new tile. The top tile can't merge, so two of them can't combine.
 
-The game has three themes, Space, Plants and Fantasy, which change only the names and pictures of the tiles. Press `t` to switch, when the game allows it. The points are the same in every theme.
+The game has three themes, Scale, Plants and Fantasy, which change only the names and pictures of the tiles. Press `t` to switch, when the game allows it. The points are the same in every theme.
 
-#### Space
+#### Scale
+
+From tiny to vast, each tile much bigger than the last. The web version draws each one as a 16-bit style pixel-art sprite. The terminal's tiles are too small for sprites, so it uses the emoji shown here.
 
 | Rank | Tile | Points |
 |---:|---|---:|
-| 1 | ✨ Dust | Starting tile |
-| 2 | 🪨 Rock | 2 |
-| 3 | 🌠 Comet | 4 |
-| 4 | 🌕 Moon | 8 |
-| 5 | 🌍 Planet | 16 |
-| 6 | 🪐 Gas Giant | 32 |
-| 7 | ⭐ Star | 64 |
-| 8 | 🔴 Red Giant | 128 |
-| 9 | ⚫ Black Hole | 256 |
+| 1 | 🔬 Atom | Starting tile |
+| 2 | 🦠 Cell | 2 |
+| 3 | 🦗 Flea | 4 |
+| 4 | 🐁 Mouse | 8 |
+| 5 | 🧍 Human | 16 |
+| 6 | 🐋 Whale | 32 |
+| 7 | 🗻 Mountain | 64 |
+| 8 | 🌍 Planet | 128 |
+| 9 | ⭐ Star | 256 |
 | 10 | 🌀 Galaxy | 512 |
 | 11 | 🌌 Universe | 1024 |
 
@@ -107,7 +109,7 @@ The web version draws each class as a 16-bit style pixel-art sprite. The termina
 | 10 | 🏰 Paladin | 512 |
 | 11 | 🧙 Wizard | 1024 |
 
-New tiles are the first tile 90% of the time and the second 10% of the time (Dust or Rock in Space).
+New tiles are the first tile 90% of the time and the second 10% of the time (Atom or Cell in Scale).
 
 ### Good to know
 

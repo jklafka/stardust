@@ -10,18 +10,20 @@
   --ending-delay: 300ms; /* Lets the last move finish first. */
   --ending-fade: 700ms;
 
-  /* Tile colors follow the terminal version's palette. */
-  --tile-1: #8a8a8a; --ink-1: #000;
-  --tile-2: #875f00; --ink-2: #fff8e1;
-  --tile-3: #007699; --ink-3: #fff;
-  --tile-4: #bcbcbc; --ink-4: #000;
-  --tile-5: #afd7ff; --ink-5: #000;
-  --tile-6: #5f5faf; --ink-6: #fff;
-  --tile-7: #ff5f00; --ink-7: #000;
-  --tile-8: #5f0000; --ink-8: #fff;
-  --tile-9: #8f45b8; --ink-9: #fff;
-  --tile-10: #ff87ff; --ink-10: #000;
-  --tile-11: #fff; --ink-11: #000;
+  /* The default theme, Scale. Tile colors follow the terminal version's
+     palette. Each background sets off the tier's sprite, and the ink is
+     readable on it. */
+  --tile-1: #d0d0d0; --ink-1: #000;
+  --tile-2: #ffd7ff; --ink-2: #000;
+  --tile-3: #ffd7af; --ink-3: #000;
+  --tile-4: #afd7af; --ink-4: #000;
+  --tile-5: #87d7ff; --ink-5: #000;
+  --tile-6: #008787; --ink-6: #fff;
+  --tile-7: #ff875f; --ink-7: #000;
+  --tile-8: #00005f; --ink-8: #fff;
+  --tile-9: #5f0087; --ink-9: #fff;
+  --tile-10: #5f5faf; --ink-10: #fff;
+  --tile-11: #ffd700; --ink-11: #000;
 }
 
 /* The plants theme only swaps the tile colors. Each background is light or
