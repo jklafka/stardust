@@ -39,11 +39,26 @@
 
     <div id="theme" class="theme">
       <div class="theme-row">
-        <label class="theme-label" for="theme-select">Theme</label>
-        <select id="theme-select" class="theme-select"></select>
+        <span id="theme-label" class="theme-label">Theme</span>
+        <button id="theme-button" class="theme-button" type="button" aria-haspopup="dialog" aria-labelledby="theme-label theme-button-name">
+          <span id="theme-button-picture" class="theme-picture" aria-hidden="true"></span>
+          <span id="theme-button-name"></span>
+        </button>
       </div>
       <p id="theme-note" class="theme-note" hidden>Themes can be changed before the first move or when the game ends.</p>
     </div>
+
+    <dialog id="theme-dialog" class="theme-dialog" aria-labelledby="theme-dialog-title">
+      <h2 id="theme-dialog-title" class="theme-dialog-title">Choose a theme</h2>
+      <div id="theme-wheel" class="theme-wheel">
+        <div class="theme-hub" aria-hidden="true">
+          <strong id="theme-hub-name"></strong>
+          <span id="theme-hub-range"></span>
+          <span id="theme-hub-win"></span>
+        </div>
+      </div>
+      <button id="theme-close" class="theme-close" type="button">Close</button>
+    </dialog>
 
     <p id="help" class="help">
       <span class="key-help">Use the arrow keys, <kbd>WASD</kbd> or <kbd>IJKL</kbd>, or drag, to move. Press <kbd>n</kbd> for a new game and <kbd>t</kbd> to change theme.</span>
