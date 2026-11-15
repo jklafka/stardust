@@ -1,31 +1,6 @@
-//! Pixel art for the Fantasy theme, in the style of SNES-era battle sprites: 16x24
-//! pixels and at most 15 colors plus transparency, as a SNES sprite had. Only the
-//! web version draws these. The terminal's tiles are too small, so it uses each
-//! tier's emoji instead.
-//!
-//! In each drawing, `.` is transparent and every other character is a palette entry.
+//! The Fantasy theme's classes, from Bard to Wizard.
 
-pub const WIDTH: usize = 16;
-pub const HEIGHT: usize = 24;
-
-pub struct Sprite {
-    /// The tier this draws, so a test can catch sprites in the wrong order.
-    #[cfg_attr(not(test), expect(dead_code))]
-    pub name: &'static str,
-    pub palette: &'static [(char, u32)],
-    pub rows: [&'static str; HEIGHT],
-}
-
-impl Sprite {
-    /// A pixel as 0xRRGGBB, or None if it's transparent or off the sprite.
-    pub fn pixel(&self, x: usize, y: usize) -> Option<u32> {
-        let wanted = *self.rows.get(y)?.as_bytes().get(x)? as char;
-        self.palette
-            .iter()
-            .find(|(ch, _)| *ch == wanted)
-            .map(|(_, rgb)| *rgb)
-    }
-}
+use super::Sprite;
 
 /// In tier order, lowest first.
 pub const FANTASY: [Sprite; 11] = [
@@ -503,46 +478,3 @@ pub const FANTASY: [Sprite; 11] = [
         ],
     },
 ];
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::collections::HashSet;
-
-    #[test]
-    fn every_sprite_has_the_right_shape() {
-        for sprite in &FANTASY {
-            for row in &sprite.rows {
-                assert_eq!(row.len(), WIDTH, "{}: {row}", sprite.name);
-            }
-        }
-    }
-
-    #[test]
-    fn sprites_keep_to_their_palettes() {
-        for sprite in &FANTASY {
-            // SNES sprites had 15 colors plus transparency.
-            assert!(sprite.palette.len() <= 15, "{}", sprite.name);
-            let palette: HashSet<char> = sprite.palette.iter().map(|(ch, _)| *ch).collect();
-            assert_eq!(palette.len(), sprite.palette.len(), "{}", sprite.name);
-            assert!(!palette.contains(&'.'), "{}", sprite.name);
-
-            let used: HashSet<char> = sprite.rows.iter().flat_map(|row| row.chars()).collect();
-            for ch in used.iter().filter(|ch| **ch != '.') {
-                assert!(palette.contains(ch), "{} uses {ch}", sprite.name);
-            }
-            for ch in &palette {
-                assert!(used.contains(ch), "{} never uses {ch}", sprite.name);
-            }
-        }
-    }
-
-    #[test]
-    fn pixels_read_from_the_drawing() {
-        let bard = &FANTASY[0];
-        assert_eq!(bard.pixel(0, 0), None); // transparent
-        assert_eq!(bard.pixel(9, 0), Some(0x1c1424));
-        assert_eq!(bard.pixel(WIDTH, 0), None);
-        assert_eq!(bard.pixel(0, HEIGHT), None);
-    }
-}

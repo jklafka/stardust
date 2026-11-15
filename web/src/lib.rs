@@ -370,10 +370,7 @@ pub extern "C" fn stardust_tier_name_len(theme: u32, tier_index: u32) -> u32 {
 }
 
 fn sprite(theme: u32, tier_index: u32) -> Option<&'static Sprite> {
-    if THEMES.get(theme as usize)?.id != "fantasy" {
-        return None;
-    }
-    sprites::FANTASY.get(tier_index as usize)
+    sprites::for_theme(THEMES.get(theme as usize)?.id)?.get(tier_index as usize)
 }
 
 #[unsafe(no_mangle)]
@@ -648,34 +645,39 @@ mod tests {
     }
 
     #[test]
-    fn only_the_fantasy_theme_has_sprites() {
+    fn sprite_themes_draw_every_tier() {
         for theme in 0..=THEMES.len() as u32 {
             let expected = THEMES
                 .get(theme as usize)
-                .is_some_and(|t| t.id == "fantasy");
+                .is_some_and(|t| sprites::for_theme(t.id).is_some());
             for tier in 0..MAX_RANK as u32 {
                 assert_eq!(stardust_tier_has_sprite(theme, tier), expected as u32);
             }
+            assert_eq!(stardust_tier_has_sprite(theme, MAX_RANK as u32), 0);
         }
-        assert_eq!(stardust_tier_has_sprite(2, MAX_RANK as u32), 0);
     }
 
     #[test]
     fn sprites_are_in_tier_order() {
-        let fantasy = &THEMES[stardust_core::theme_index("fantasy").unwrap()];
-        for (tier, sprite) in fantasy.tiers.iter().zip(&sprites::FANTASY) {
-            assert_eq!(tier.name, sprite.name);
+        for theme in &THEMES {
+            let Some(sprites) = sprites::for_theme(theme.id) else {
+                continue;
+            };
+            assert_eq!(theme.tiers.len(), sprites.len(), "{}", theme.id);
+            for (tier, sprite) in theme.tiers.iter().zip(sprites) {
+                assert_eq!(tier.name, sprite.name, "{}", theme.id);
+            }
         }
-        assert_eq!(fantasy.tiers.len(), sprites::FANTASY.len());
     }
 
     #[test]
     fn sprite_pixels_pack_into_their_fields() {
         // Row 0 of the Bard: transparent, then its outline color from column 9.
-        assert_eq!(stardust_tier_sprite_pixel(2, 0, 0, 0), 0);
-        assert_eq!(stardust_tier_sprite_pixel(2, 0, 9, 0), 0x011c_1424);
-        assert_eq!(stardust_tier_sprite_pixel(2, 0, 16, 0), 0);
-        assert_eq!(stardust_tier_sprite_pixel(0, 0, 9, 0), 0);
+        let fantasy = stardust_core::theme_index("fantasy").unwrap() as u32;
+        assert_eq!(stardust_tier_sprite_pixel(fantasy, 0, 0, 0), 0);
+        assert_eq!(stardust_tier_sprite_pixel(fantasy, 0, 9, 0), 0x011c_1424);
+        assert_eq!(stardust_tier_sprite_pixel(fantasy, 0, 16, 0), 0);
+        assert_eq!(stardust_tier_sprite_pixel(THEMES.len() as u32, 0, 9, 0), 0);
         assert_eq!(
             (stardust_sprite_width(), stardust_sprite_height()),
             (16, 24)

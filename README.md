@@ -142,7 +142,7 @@ The repo is a Cargo workspace, with the game rules shared by both versions:
 | `terminal/src/theme.rs` | Loading and saving the chosen theme |
 | `terminal/src/main.rs` | Argument parsing and startup |
 | `web/src/lib.rs` | Functions exported to the page from WebAssembly |
-| `web/src/sprites.rs` | Pixel art for the Fantasy theme |
+| `web/src/sprites/` | Pixel art for the themes drawn with sprites |
 | `web/www/app.js` | Page logic: rendering, animation, keys, swipes, saved game, best score and theme |
 | `web/index.template.html`, `web/www/style.css` | The page itself, including the theme colors |
 | `web/www/404.html` | The page shown for unknown addresses |
