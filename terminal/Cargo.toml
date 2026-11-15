@@ -2,7 +2,7 @@
 name = "stardust"
 version = "0.1.0"
 edition = "2024"
-description = "Merge cosmic matter on a 4x4 grid, from Dust up to a Universe."
+description = "Merge tiles on a 4x4 grid, from an Atom up to a Universe."
 
 [dependencies]
 libc = "0.2"

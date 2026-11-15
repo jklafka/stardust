@@ -7,7 +7,7 @@ use stardust::{best, terminal, theme};
 use stardust_core::Game;
 
 const USAGE: &str = "\
-Merge cosmic matter from Dust up to a Universe.
+Merge tiles from an Atom up to a Universe.
 
 Usage: stardust [--seed N]
 

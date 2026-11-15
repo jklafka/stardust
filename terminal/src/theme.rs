@@ -37,10 +37,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn parses_ids_and_falls_back_to_space() {
+    fn parses_ids_and_falls_back_to_scale() {
+        assert_eq!(parse("scale"), 0);
         assert_eq!(parse("plants"), 1);
         assert_eq!(parse("plants\n"), 1);
         assert_eq!(parse("fantasy"), 2);
+        // Space was the default before Scale replaced it.
         assert_eq!(parse("space"), 0);
         assert_eq!(parse(""), 0);
         assert_eq!(parse("Plants"), 0);

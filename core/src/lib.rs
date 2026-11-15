@@ -42,22 +42,23 @@ impl Theme {
 
 /// Every theme. The first is the default.
 pub const THEMES: [Theme; 3] = [
+    // The web version draws these tiers as sprites. See web/src/sprites/.
     Theme {
-        id: "space",
-        name: "Space",
+        id: "scale",
+        name: "Scale",
         win_message: "You made a Universe!",
         tiers: [
-            tier("Dust", '✨', 245, 16),
-            tier("Rock", '🪨', 94, 230),
-            tier("Comet", '🌠', 31, 231),
-            tier("Moon", '🌕', 250, 16),
-            tier("Planet", '🌍', 153, 16),
-            tier("Gas Giant", '🪐', 61, 231),
-            tier("Star", '⭐', 202, 16),
-            tier("Red Giant", '🔴', 52, 231),
-            tier("Black Hole", '⚫', 134, 231),
-            tier("Galaxy", '🌀', 213, 16),
-            tier("Universe", '🌌', 231, 16),
+            tier("Atom", '🔬', 252, 16),
+            tier("Cell", '🦠', 225, 16),
+            tier("Flea", '🦗', 223, 16),
+            tier("Mouse", '🐁', 151, 16),
+            tier("Human", '🧍', 117, 16),
+            tier("Whale", '🐋', 30, 231),
+            tier("Mountain", '🗻', 209, 16),
+            tier("Planet", '🌍', 17, 231),
+            tier("Star", '⭐', 54, 231),
+            tier("Galaxy", '🌀', 61, 231),
+            tier("Universe", '🌌', 220, 16),
         ],
     },
     Theme {
@@ -78,7 +79,7 @@ pub const THEMES: [Theme; 3] = [
             tier("Oak", '🌳', 220, 16),
         ],
     },
-    // The web version draws these tiers as sprites. See web/src/sprites.rs.
+    // The web version draws these tiers as sprites. See web/src/sprites/.
     Theme {
         id: "fantasy",
         name: "Fantasy",
@@ -375,7 +376,7 @@ mod tests {
 
     #[test]
     fn every_theme_has_eleven_unique_tiers_that_fit() {
-        assert_eq!(THEMES[0].id, "space");
+        assert_eq!(THEMES[0].id, "scale");
         assert_eq!(THEMES[1].id, "plants");
         assert_eq!(THEMES[2].id, "fantasy");
         for theme in &THEMES {
@@ -398,6 +399,7 @@ mod tests {
         assert_eq!(THEMES[0].win_message, "You made a Universe!");
         assert_eq!(THEMES[1].win_message, "You grew an Oak!");
         assert_eq!(THEMES[2].win_message, "You trained a Wizard!");
+        assert_eq!(theme_index("scale"), Some(0));
         assert_eq!(theme_index("plants"), Some(1));
         assert_eq!(theme_index("fantasy"), Some(2));
         assert_eq!(theme_index("nope"), None);
@@ -440,7 +442,7 @@ mod tests {
         assert!(game.cycle_theme());
         assert_eq!(game.theme().id, "fantasy");
         assert!(game.cycle_theme());
-        assert_eq!(game.theme().id, "space");
+        assert_eq!(game.theme().id, "scale");
         assert_eq!((game.board, game.score), (board, 77));
         game.set_theme(99);
         assert_eq!(game.theme, 0);
@@ -561,20 +563,20 @@ mod tests {
     }
 
     #[test]
-    fn spawns_only_the_two_lowest_tiers_mostly_dust() {
+    fn spawns_only_the_two_lowest_tiers_mostly_the_lowest() {
         let mut game = Game::new(1, 0);
-        let (mut dust, mut rock) = (0, 0);
+        let (mut lowest, mut second) = (0, 0);
         for _ in 0..2000 {
             game.board = [[0; SIZE]; SIZE];
             let (r, c) = game.spawn().unwrap();
             match game.board[r][c] {
-                1 => dust += 1,
-                2 => rock += 1,
+                1 => lowest += 1,
+                2 => second += 1,
                 other => panic!("spawned rank {other}"),
             }
         }
-        assert!(rock > 0);
-        assert!(dust > rock * 5);
+        assert!(second > 0);
+        assert!(lowest > second * 5);
     }
 
     #[test]
