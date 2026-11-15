@@ -74,6 +74,22 @@
   --tile-11: #ffd75f; --ink-11: #000;
 }
 
+/* The minerals theme only swaps the tile colors. Each background sets off the
+   mineral's sprite, and the ink is readable on it. */
+:root[data-theme="minerals"] {
+  --tile-1: #d7d7af; --ink-1: #000;
+  --tile-2: #5f8787; --ink-2: #fff;
+  --tile-3: #5f5f87; --ink-3: #fff;
+  --tile-4: #5f87af; --ink-4: #fff;
+  --tile-5: #ffd7af; --ink-5: #000;
+  --tile-6: #d7afd7; --ink-6: #000;
+  --tile-7: #5f875f; --ink-7: #fff;
+  --tile-8: #875f87; --ink-8: #fff;
+  --tile-9: #5f5faf; --ink-9: #fff;
+  --tile-10: #afd7d7; --ink-10: #000;
+  --tile-11: #303a78; --ink-11: #fff;
+}
+
 * {
   box-sizing: border-box;
 }

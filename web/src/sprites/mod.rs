@@ -7,6 +7,7 @@
 //! transparent and every other character is a palette entry.
 
 mod fantasy;
+mod minerals;
 mod notes;
 mod scale;
 
@@ -34,10 +35,11 @@ impl Sprite {
 
 /// Every theme drawn with sprites, by theme id. Each list is in tier order,
 /// lowest first.
-const THEMED: [(&str, &[Sprite]); 3] = [
+const THEMED: [(&str, &[Sprite]); 4] = [
     ("scale", &scale::SCALE),
     ("fantasy", &fantasy::FANTASY),
     ("notes", &notes::NOTES),
+    ("minerals", &minerals::MINERALS),
 ];
 
 /// A theme's sprites, or None if the theme is drawn with its glyphs.
@@ -92,6 +94,7 @@ mod tests {
         assert!(for_theme("scale").is_some());
         assert!(for_theme("fantasy").is_some());
         assert!(for_theme("notes").is_some());
+        assert!(for_theme("minerals").is_some());
         assert!(for_theme("nope").is_none());
     }
 
