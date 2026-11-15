@@ -6,7 +6,7 @@ use std::fmt::Write;
 /// ASCII and the emoji that are always double width.
 pub fn char_width(ch: char) -> usize {
     match ch as u32 {
-        0x26AB | 0x2728 | 0x2B50 | 0x1F300..=0x1FAFF => 2,
+        0x2728 | 0x2B50 | 0x1F300..=0x1FAFF => 2,
         _ => 1,
     }
 }
