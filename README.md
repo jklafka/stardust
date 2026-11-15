@@ -36,9 +36,9 @@ Then open <http://localhost:8000>. After building, `web/www` is a complete stati
 
 ## How to play
 
-Every move slides all the tiles as far as they can go in one direction. When two matching tiles collide, they merge into the next tile up, and a new Atom or Cell tile (Seed or Sprout in the Plants theme, Bard or Rogue in the Fantasy theme, 128th or 64th in the Notes theme, Graphite or Talc in the Minerals theme) then appears in an empty cell.
+Every move slides all the tiles as far as they can go in one direction. When two matching tiles collide, they merge into the next tile up, and a new Atom or Cell tile (Seed or Sprout in the Plants theme, Bard or Rogue in the Fantasy theme, 128th or 64th in the Notes theme, Graphite or Talc in the Minerals theme, Quark or Proton in the Fusion theme) then appears in an empty cell.
 
-Make a Universe (an Oak in the Plants theme, a Wizard in the Fantasy theme, a Maxima in the Notes theme, a Diamond in the Minerals theme) to win, then keep playing for a higher score if you like. The game ends when the grid is full and no neighboring tiles can merge.
+Make a Universe (an Oak in the Plants theme, a Wizard in the Fantasy theme, a Maxima in the Notes theme, a Diamond in the Minerals theme, Uranium in the Fusion theme) to win, then keep playing for a higher score if you like. The game ends when the grid is full and no neighboring tiles can merge.
 
 | Input | Action |
 |---|---|
@@ -55,7 +55,7 @@ In a terminal, swipes only work if your terminal app sends touch as mouse input,
 
 Merging two tiles of one rank makes one tile of the next rank, and scores the points shown for the new tile. The top tile can't merge, so two of them can't combine.
 
-The game has five themes, Scale, Plants, Fantasy, Notes and Minerals, which change only the names and pictures of the tiles. Press `t` to switch, when the game allows it. The points are the same in every theme.
+The game has six themes, Scale, Plants, Fantasy, Notes, Minerals and Fusion, which change only the names and pictures of the tiles. Press `t` to switch, when the game allows it. The points are the same in every theme.
 
 #### Scale
 
@@ -144,6 +144,24 @@ The middle tiles are the Mohs hardness scale, from Talc to Corundum, between the
 | 9 | 🟡 Topaz | 256 |
 | 10 | 🔴 Corundum | 512 |
 | 11 | 💎 Diamond | 1024 |
+
+#### Fusion
+
+Stars fuse lighter nuclei into heavier ones only up to iron, where fusion stops releasing energy, so gold and uranium need rapid neutron capture, such as in the flood of neutrons when neutron stars collide. Like Fantasy, the web version draws each tile as a pixel-art sprite, and the terminal uses the emoji shown here.
+
+| Rank | Tile | Points |
+|---:|---|---:|
+| 1 | ✨ Quark | Starting tile |
+| 2 | 🔴 Proton | 2 |
+| 3 | 💧 Hydrogen | 4 |
+| 4 | 🎈 Helium | 8 |
+| 5 | 💎 Carbon | 16 |
+| 6 | 💨 Oxygen | 32 |
+| 7 | 🏮 Neon | 64 |
+| 8 | 💻 Silicon | 128 |
+| 9 | 🔩 Iron | 256 |
+| 10 | 🪙 Gold | 512 |
+| 11 | 🟢 Uranium | 1024 |
 
 New tiles are the first tile 90% of the time and the second 10% of the time (Atom or Cell in Scale).
 

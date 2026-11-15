@@ -90,6 +90,22 @@
   --tile-11: #303a78; --ink-11: #fff;
 }
 
+/* The fusion theme only swaps the tile colors. Each background sets off the
+   particle's or element's sprite, and the ink is readable on it. */
+:root[data-theme="fusion"] {
+  --tile-1: #5f0087; --ink-1: #fff;
+  --tile-2: #ffafaf; --ink-2: #000;
+  --tile-3: #afd7ff; --ink-3: #000;
+  --tile-4: #ffffaf; --ink-4: #000;
+  --tile-5: #585858; --ink-5: #fff;
+  --tile-6: #00afff; --ink-6: #000;
+  --tile-7: #ff5f00; --ink-7: #000;
+  --tile-8: #5f5f87; --ink-8: #fff;
+  --tile-9: #af5f00; --ink-9: #fff;
+  --tile-10: #ffd700; --ink-10: #000;
+  --tile-11: #005f00; --ink-11: #fff;
+}
+
 * {
   box-sizing: border-box;
 }
