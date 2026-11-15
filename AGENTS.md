@@ -28,7 +28,7 @@ python3 -m http.server -d web/www 8000    # Serve it at http://localhost:8000
 | `terminal/src/theme.rs` | Loads and saves the chosen theme in `~/.stardust_theme`. |
 | `terminal/src/main.rs` | Argument parsing and startup. |
 | `web/src/lib.rs` | Plain functions exported from WebAssembly to the page. |
-| `web/src/sprites.rs` | Pixel art for the Fantasy theme, drawn only by the web version. |
+| `web/src/sprites/` | Pixel art for the themes drawn with sprites, one file per theme, drawn only by the web version. `mod.rs` lists which themes have sprites. |
 | `web/www/app.js` | Page logic: rendering, animation, keys, swipes, saved game, best score and theme. |
 | `web/www/style.css`, `web/index.template.html` | The page itself, including the theme palettes. Edit the template, not the generated `web/www/index.html`. |
 | `web/www/404.html` | The page served for unknown paths. Standalone, with its own styles. |
@@ -52,7 +52,7 @@ Keep game rules in `core` so both versions share them and they can be tested wit
 - Switching is allowed only before the first move, while the win message shows, or when the game is over (`Game::can_switch_theme`).
 - Every glyph must meet the `char_width` rule.
 - Adding a theme needs a CSS palette in `web/www/style.css` too.
-- Fantasy sprites stay 16x24 with at most 15 colors plus transparency, like SNES sprites, and in tier order. Tests check all of this. Their tiers still need a glyph, because the terminal's tiles are too small to draw sprites.
+- Themes drawn with sprites are listed in `web/src/sprites/mod.rs`, and each has its own file there. Sprites stay 16x24 with at most 15 colors plus transparency, like SNES sprites, and in tier order. Tests check all of this. Their tiers still need a glyph, because the terminal's tiles are too small to draw sprites.
 
 **Best score**
 - `~/.stardust_best` holds a plain integer. Keep that format so existing scores still load.
