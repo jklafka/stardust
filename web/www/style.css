@@ -635,9 +635,10 @@ kbd {
   font-weight: 700;
 }
 
-/* Notes are dark ink, which vanishes on the dark page, so the list shows each
-   one on a small sheet of paper. */
-:root[data-theme="notes"] .tiers .sprite {
+/* Notes are dark ink, which vanishes on the dark page, so the tier list and
+   the theme pictures show each one on a small sheet of paper. */
+:root[data-theme="notes"] .tiers .sprite,
+.theme-picture[data-theme="notes"] .sprite {
   background: #fbf6e6;
   border-radius: 2px;
 }

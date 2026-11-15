@@ -283,6 +283,7 @@ function renderThemeControl() {
   document.documentElement.dataset.theme = theme.id;
   if (themeButton.dataset.theme !== theme.id) {
     themeButton.dataset.theme = theme.id;
+    byId("theme-button-picture").dataset.theme = theme.id;
     byId("theme-button-picture").replaceChildren(themePicture(theme));
     byId("theme-button-name").textContent = theme.name;
   }
@@ -311,6 +312,7 @@ function buildThemeWheel() {
       choice.style.setProperty("--y", Math.sin(angle).toFixed(4));
       const picture = document.createElement("span");
       picture.className = "theme-picture";
+      picture.dataset.theme = theme.id;
       picture.setAttribute("aria-hidden", "true");
       picture.append(themePicture(theme));
       const first = theme.tiers[0].name;
