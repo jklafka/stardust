@@ -41,7 +41,7 @@ impl Theme {
 }
 
 /// Every theme. The first is the default.
-pub const THEMES: [Theme; 3] = [
+pub const THEMES: [Theme; 4] = [
     // The web version draws these tiers as sprites. See web/src/sprites/.
     Theme {
         id: "scale",
@@ -96,6 +96,26 @@ pub const THEMES: [Theme; 3] = [
             tier("Warlock", '💀', 139, 16),
             tier("Paladin", '🏰', 88, 231),
             tier("Wizard", '🧙', 229, 16),
+        ],
+    },
+    // Two of each note value last as long as the next. The web version draws
+    // these tiers as sprites.
+    Theme {
+        id: "notes",
+        name: "Notes",
+        win_message: "You wrote a Maxima!",
+        tiers: [
+            tier("128th", '🎵', 254, 16),
+            tier("64th", '🎶', 195, 16),
+            tier("32nd", '🥁', 189, 16),
+            tier("16th", '🎸', 153, 16),
+            tier("Eighth", '🎷', 158, 16),
+            tier("Quarter", '🎺', 193, 16),
+            tier("Half", '🪗', 230, 16),
+            tier("Whole", '🎻', 223, 16),
+            tier("Breve", '🎹', 217, 16),
+            tier("Longa", '🔔', 182, 16),
+            tier("Maxima", '🎼', 221, 16),
         ],
     },
 ];
@@ -379,6 +399,7 @@ mod tests {
         assert_eq!(THEMES[0].id, "scale");
         assert_eq!(THEMES[1].id, "plants");
         assert_eq!(THEMES[2].id, "fantasy");
+        assert_eq!(THEMES[3].id, "notes");
         for theme in &THEMES {
             assert_eq!(theme.tiers.len(), MAX_RANK as usize);
             let names: std::collections::HashSet<_> = theme.tiers.iter().map(|t| t.name).collect();
@@ -399,9 +420,11 @@ mod tests {
         assert_eq!(THEMES[0].win_message, "You made a Universe!");
         assert_eq!(THEMES[1].win_message, "You grew an Oak!");
         assert_eq!(THEMES[2].win_message, "You trained a Wizard!");
+        assert_eq!(THEMES[3].win_message, "You wrote a Maxima!");
         assert_eq!(theme_index("scale"), Some(0));
         assert_eq!(theme_index("plants"), Some(1));
         assert_eq!(theme_index("fantasy"), Some(2));
+        assert_eq!(theme_index("notes"), Some(3));
         assert_eq!(theme_index("nope"), None);
     }
 
@@ -441,6 +464,8 @@ mod tests {
         assert_eq!(game.theme().id, "plants");
         assert!(game.cycle_theme());
         assert_eq!(game.theme().id, "fantasy");
+        assert!(game.cycle_theme());
+        assert_eq!(game.theme().id, "notes");
         assert!(game.cycle_theme());
         assert_eq!(game.theme().id, "scale");
         assert_eq!((game.board, game.score), (board, 77));

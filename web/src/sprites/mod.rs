@@ -7,6 +7,7 @@
 //! transparent and every other character is a palette entry.
 
 mod fantasy;
+mod notes;
 mod scale;
 
 pub const WIDTH: usize = 16;
@@ -33,7 +34,11 @@ impl Sprite {
 
 /// Every theme drawn with sprites, by theme id. Each list is in tier order,
 /// lowest first.
-const THEMED: [(&str, &[Sprite]); 2] = [("scale", &scale::SCALE), ("fantasy", &fantasy::FANTASY)];
+const THEMED: [(&str, &[Sprite]); 3] = [
+    ("scale", &scale::SCALE),
+    ("fantasy", &fantasy::FANTASY),
+    ("notes", &notes::NOTES),
+];
 
 /// A theme's sprites, or None if the theme is drawn with its glyphs.
 pub fn for_theme(id: &str) -> Option<&'static [Sprite]> {
@@ -86,6 +91,7 @@ mod tests {
         assert_eq!(ids.len(), THEMED.len());
         assert!(for_theme("scale").is_some());
         assert!(for_theme("fantasy").is_some());
+        assert!(for_theme("notes").is_some());
         assert!(for_theme("nope").is_none());
     }
 
